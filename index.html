@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BodyTrack Pro - Body Composition Tracker</title>
+<title>BodyTrack Pro - Cloud Sync Edition</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 :root {
@@ -17,7 +17,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 header{background:linear-gradient(135deg,#1a73e8,#0d47a1);color:#fff;padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:64px;box-shadow:0 2px 8px rgba(0,0,0,.2);position:sticky;top:0;z-index:100;}
 header h1{font-size:1.3rem;font-weight:700;}
 header h1 span{opacity:.75;font-weight:400;font-size:.85rem;display:block;}
-.header-actions{display:flex;gap:10px;align-items:center;}
+.header-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
 .btn{border:none;cursor:pointer;border-radius:8px;font-size:.875rem;font-weight:600;padding:8px 18px;transition:.2s;display:inline-flex;align-items:center;gap:6px;}
 .btn-primary{background:#fff;color:var(--primary);}.btn-primary:hover{background:#e8f0fe;}
 .btn-success{background:var(--success);color:#fff;}.btn-success:hover{background:#2d8f47;}
@@ -104,7 +104,6 @@ tbody td:first-child{font-weight:600;}
 
 .upload-zone{border:2.5px dashed var(--border);border-radius:12px;padding:36px 20px;text-align:center;cursor:pointer;transition:.2s;background:#fafafa;}
 .upload-zone:hover{border-color:var(--primary);background:#e8f0fe22;}
-.upload-zone.dragover{border-color:var(--primary);background:#e8f0fe44;}
 .upload-icon{font-size:3rem;margin-bottom:10px;}
 .upload-text{font-size:.95rem;color:var(--muted);}
 .upload-text strong{color:var(--primary);}
@@ -116,6 +115,7 @@ tbody td:first-child{font-weight:600;}
 .alert-warning{background:#fff8e1;color:#f57f17;}
 
 .sync-bar{background:linear-gradient(135deg,#e8f5e9,#f1f8e9);border:1px solid #a5d6a7;border-radius:10px;padding:10px 16px;display:flex;align-items:center;gap:10px;margin-bottom:20px;font-size:.85rem;color:#2e7d32;}
+.sync-bar.syncing{background:linear-gradient(135deg,#e8f0fe,#f3e5f5);border-color:#7c4dff;color:#4a148c;}
 .sync-dot{width:10px;height:10px;border-radius:50%;background:var(--success);animation:pulse 2s infinite;}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
 
@@ -154,14 +154,19 @@ tbody td:first-child{font-weight:600;}
 .compare-bar{flex:1;height:6px;background:#e0e0e0;border-radius:99px;overflow:hidden;}
 .compare-fill{height:100%;border-radius:99px;transition:width .6s;}
 .compare-val{min-width:60px;text-align:right;font-weight:700;font-size:.82rem;}
-.color-blue{background:var(--primary);}.color-green{background:var(--success);}.color-orange{background:#ff6d00;}.color-purple{background:#7c4dff);}.color-teal{background:#00bcd4;}
+.color-blue{background:var(--primary);}.color-green{background:var(--success);}.color-orange{background:#ff6d00;}.color-purple{background:#7c4dff;}.color-teal{background:#00bcd4;}
 
 .body-figure{display:flex;gap:30px;align-items:flex-start;justify-content:center;flex-wrap:wrap;}
 
-/* Image input area */
 .image-input-zone{border:2px dashed #7c4dff;background:#f3e8ff;border-radius:12px;padding:24px;margin-bottom:16px;text-align:center;}
 .image-input-zone h3{color:#7c4dff;margin-bottom:12px;font-size:1rem;}
 .ocr-status{font-size:.85rem;color:var(--muted);margin-top:8px;}
+
+.loading-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:300;display:none;align-items:center;justify-content:center;}
+.loading-overlay.show{display:flex;}
+.loading-box{background:#fff;border-radius:12px;padding:32px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.3);}
+.spinner{width:48px;height:48px;border:4px solid #e0e0e0;border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 16px;}
+@keyframes spin{to{transform:rotate(360deg);}}
 </style>
 </head>
 <body>
@@ -177,7 +182,7 @@ tbody td:first-child{font-weight:600;}
       <div class="avatar" id="avatarInitial">K</div>
       <span id="currentUserName">Krit</span> ▾
     </div>
-    <button class="btn btn-outline" onclick="syncToGoogleSheets()">☁️ Sync</button>
+    <button class="btn btn-outline" onclick="loadFromCloud()">☁️ Load Cloud</button>
     <button class="btn btn-primary" onclick="openModal('addModal')">＋ Add Record</button>
   </div>
 </header>
@@ -192,11 +197,11 @@ tbody td:first-child{font-weight:600;}
 
 <div class="container">
 
-  <!-- DASHBOARD -->
+  <!-- DASHBOARD TAB -->
   <div id="tab-dashboard" class="tab-content active">
-    <div class="sync-bar">
+    <div class="sync-bar" id="syncBar">
       <div class="sync-dot"></div>
-      <span>Data stored locally in your browser · Last saved: <strong id="lastSync">Just now</strong></span>
+      <span id="syncStatus">Data stored locally · Last saved: <strong id="lastSync">Just now</strong></span>
     </div>
     <div class="grid-4" id="statsRow"></div>
     
@@ -253,7 +258,7 @@ tbody td:first-child{font-weight:600;}
     </div>
   </div>
 
-  <!-- RECORDS -->
+  <!-- RECORDS TAB -->
   <div id="tab-records" class="tab-content">
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
@@ -278,26 +283,25 @@ tbody td:first-child{font-weight:600;}
     </div>
   </div>
 
-  <!-- UPLOAD -->
+  <!-- UPLOAD TAB -->
   <div id="tab-upload" class="tab-content">
     <div class="card">
       <div class="card-title"><span>📷</span> Scan Body Composition Report</div>
       
-      <!-- NEW: Image Input Method -->
       <div class="image-input-zone">
-        <h3>📸 Method 1: Upload Report Photo</h3>
-        <p style="color:var(--muted);margin-bottom:12px">Take a photo of your InBody report and upload it</p>
+        <h3>📸 Upload Report Photo</h3>
+        <p style="color:var(--muted);margin-bottom:12px">Take a photo of your InBody report</p>
         <input type="file" id="imageInput" accept="image/*" capture="environment" style="display:none" onchange="handleImageUpload(event)"/>
         <button class="btn btn-primary" onclick="document.getElementById('imageInput').click()">📷 Take/Upload Photo</button>
         <div class="ocr-status" id="ocrStatus"></div>
       </div>
 
-      <div class="alert alert-info">💡 After uploading, review the extracted values below and click Save</div>
+      <div class="alert alert-info">💡 Review extracted values below and click Save</div>
       
       <img id="preview-img" alt="Report preview"/>
       
       <div id="extractedForm" style="display:none;margin-top:20px">
-        <div class="alert alert-success">✅ Values extracted! Review and edit if needed, then click Save.</div>
+        <div class="alert alert-success">✅ Values extracted! Review and edit if needed.</div>
         <div class="form-grid" id="extractedFields"></div>
         <div style="display:flex;gap:10px;margin-top:16px">
           <button class="btn btn-success" onclick="saveExtracted()">✅ Save Record</button>
@@ -307,7 +311,7 @@ tbody td:first-child{font-weight:600;}
     </div>
   </div>
 
-  <!-- COMPARE -->
+  <!-- COMPARE TAB -->
   <div id="tab-compare" class="tab-content">
     <div class="card">
       <div class="card-title"><span>👥</span> User Comparison</div>
@@ -315,16 +319,21 @@ tbody td:first-child{font-weight:600;}
     </div>
   </div>
 
-  <!-- SETTINGS -->
+  <!-- SETTINGS TAB -->
   <div id="tab-settings" class="tab-content">
     <div class="card">
-      <div class="card-title"><span>⚙️</span> Settings</div>
+      <div class="card-title"><span>⚙️</span> Cloud Sync Settings</div>
+      <div class="alert alert-info">
+        📖 <strong>How it works:</strong> Enter your Google Apps Script URL below. 
+        When you save a record, it uploads to Google Sheets. 
+        Click "☁️ Load Cloud" button in header to download all records from Google Sheets.
+      </div>
       <div class="settings-row">
         <div>
-          <div class="settings-label">Google Sheets URL (Optional)</div>
-          <div class="settings-sub">Paste your Google Apps Script Web App URL for cloud backup</div>
+          <div class="settings-label">Google Apps Script URL</div>
+          <div class="settings-sub">Your Web app deployment URL (ends with /exec)</div>
         </div>
-        <input id="gsUrl" style="border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;font-size:.82rem;width:340px" placeholder="https://script.google.com/macros/s/..."/>
+        <input id="gsUrl" style="border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;font-size:.82rem;width:340px;max-width:100%" placeholder="https://script.google.com/macros/s/.../exec"/>
       </div>
       <div class="settings-row">
         <div>
@@ -333,9 +342,10 @@ tbody td:first-child{font-weight:600;}
         </div>
         <label class="toggle"><input type="checkbox" id="autoSync" checked/><span class="toggle-slider"></span></label>
       </div>
-      <div style="margin-top:16px;display:flex;gap:10px">
+      <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
         <button class="btn btn-primary" onclick="saveSettings()">💾 Save Settings</button>
-        <button class="btn btn-danger" onclick="clearAllData()">🗑 Clear All Data</button>
+        <button class="btn btn-success" onclick="testConnection()">🧪 Test Connection</button>
+        <button class="btn btn-danger" onclick="clearAllData()">🗑 Clear Local Data</button>
       </div>
     </div>
     
@@ -406,8 +416,6 @@ tbody td:first-child{font-weight:600;}
         <div class="form-group"><label>Fat Control (kg)</label><input type="number" id="f-fc" placeholder="-5.7" step="0.1"/></div>
       </div>
       
-      <!-- ✅ IMPEDANCE SECTION REMOVED AS REQUESTED -->
-      
     </div>
     <div class="modal-footer">
       <button class="btn btn-gray" onclick="closeModal('addModal')">Cancel</button>
@@ -427,10 +435,20 @@ tbody td:first-child{font-weight:600;}
   </div>
 </div>
 
+<!-- LOADING OVERLAY -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-box">
+    <div class="spinner"></div>
+    <div id="loadingText" style="font-weight:600;color:var(--primary)">Loading...</div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script>
-/* SEED DATA */
+/* ═══════════════════════════════════════════════════════
+   DATA LAYER
+═══════════════════════════════════════════════════════ */
 function makeSeedRecords(){
   const base=[
     ['Krit','2025-12-05',75.2,31.8,17.4,40.1,55.8,25.8,23.1,0.90,1578],
@@ -439,13 +457,6 @@ function makeSeedRecords(){
     ['Krit','2026-03-05',73.2,32.3,15.9,41.2,57.0,25.0,21.7,0.88,1596],
     ['Krit','2026-04-02',72.9,32.3,15.8,41.6,57.0,24.9,21.7,0.88,1600],
     ['Krit','2026-05-05',72.8,32.4,15.8,41.8,57.0,24.9,21.7,0.88,1602],
-    ['Alice','2026-02-10',60.1,24.2,14.5,33.1,44.8,22.8,24.1,0.80,1320],
-    ['Alice','2026-03-12',59.5,24.5,13.8,33.4,45.1,22.5,23.2,0.79,1328],
-    ['Alice','2026-04-15',58.9,24.7,13.2,33.8,45.5,22.2,22.4,0.79,1335],
-    ['Alice','2026-05-05',58.3,25.0,12.8,34.1,45.9,22.0,22.0,0.78,1341],
-    ['Bob','2026-01-08',88.0,38.5,24.1,47.2,61.8,27.1,27.4,0.94,1820],
-    ['Bob','2026-03-10',86.2,38.8,23.0,47.8,62.2,26.5,26.7,0.93,1831],
-    ['Bob','2026-05-05',84.5,39.1,22.0,48.1,62.7,26.0,26.0,0.92,1845],
   ];
   return base.map(r=>({
     id:Date.now()+Math.random(),
@@ -457,21 +468,25 @@ function makeSeedRecords(){
   }));
 }
 
-/* DB */
 let db=JSON.parse(localStorage.getItem('bodytrack_db')||'null')||{
-  users:['Krit','Alice','Bob'],
+  users:['Krit'],
   currentUser:'Krit',
   records:makeSeedRecords(),
-  gsUrl:'',autoSync:true
+  gsUrl:'',
+  autoSync:true
 };
+
 function save(){
   localStorage.setItem('bodytrack_db',JSON.stringify(db));
   document.getElementById('lastSync').textContent=new Date().toLocaleTimeString();
 }
+
 function latestRecord(u){return db.records.filter(r=>r.user===u).sort((a,b)=>b.date.localeCompare(a.date))[0]||null;}
 function userRecords(u){return db.records.filter(r=>r.user===u).sort((a,b)=>a.date.localeCompare(b.date));}
 
-/* CHART */
+/* ═══════════════════════════════════════════════════════
+   CHART STATE
+═══════════════════════════════════════════════════════ */
 let trendChart=null;
 let chartRangeMonths=3;
 const METRICS={
@@ -483,7 +498,9 @@ const METRICS={
 };
 let activeMetrics={weight:true,muscle:true,fatmass:false,bmi:false,pbf:false};
 
-/* TABS */
+/* ═══════════════════════════════════════════════════════
+   TABS
+═══════════════════════════════════════════════════════ */
 function switchTab(name){
   document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
@@ -496,7 +513,9 @@ function switchTab(name){
   if(name==='settings')renderSettings();
 }
 
-/* MODALS */
+/* ═══════════════════════════════════════════════════════
+   MODALS
+═══════════════════════════════════════════════════════ */
 function openModal(id){
   document.getElementById(id).classList.add('show');
   if(id==='addModal')prepareAddModal();
@@ -504,23 +523,180 @@ function openModal(id){
 }
 function closeModal(id){document.getElementById(id).classList.remove('show');}
 
-/* TOAST */
-function toast(msg,dur=2800){
+/* ═══════════════════════════════════════════════════════
+   TOAST & LOADING
+═══════════════════════════════════════════════════════ */
+function toast(msg,dur=3000){
   const t=document.getElementById('toast');
   t.textContent=msg;t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),dur);
 }
 
-/* HELPERS */
+function showLoading(text){
+  document.getElementById('loadingText').textContent=text;
+  document.getElementById('loadingOverlay').classList.add('show');
+}
+
+function hideLoading(){
+  document.getElementById('loadingOverlay').classList.remove('show');
+}
+
+function setSyncStatus(state,message){
+  const bar=document.getElementById('syncBar');
+  const status=document.getElementById('syncStatus');
+  
+  if(state==='syncing'){
+    bar.classList.add('syncing');
+    status.innerHTML=message;
+  }else if(state==='success'){
+    bar.classList.remove('syncing');
+    status.innerHTML=message;
+  }else{
+    bar.classList.remove('syncing');
+    status.innerHTML=`Data stored locally · Last saved: <strong id="lastSync">${new Date().toLocaleTimeString()}</strong>`;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   HELPERS
+═══════════════════════════════════════════════════════ */
 function getStatus(v,min,max){return v<min?'under':v>max?'over':'normal';}
 
-/* RENDER DASHBOARD */
+/* ═══════════════════════════════════════════════════════
+   CLOUD SYNC FUNCTIONS
+═══════════════════════════════════════════════════════ */
+async function syncToGoogleSheets(){
+  const url=db.gsUrl||document.getElementById('gsUrl')?.value;
+  if(!url){
+    toast('💡 Add Google Apps Script URL in Settings first');
+    return;
+  }
+  
+  const latest=latestRecord(db.currentUser);
+  if(!latest){
+    toast('No data to sync');
+    return;
+  }
+  
+  setSyncStatus('syncing','☁️ Uploading to cloud...');
+  
+  try{
+    const response=await fetch(url,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(latest),
+      redirect:'follow'
+    });
+    
+    const text=await response.text();
+    console.log('Sync response:',text);
+    
+    try{
+      const data=JSON.parse(text);
+      if(data.status==='success'){
+        setSyncStatus('success','✅ Synced to Google Sheets!');
+        toast('✅ Data uploaded successfully!');
+      }else{
+        setSyncStatus('idle','');
+        toast('⚠️ Sync response: '+data.message);
+      }
+    }catch(e){
+      setSyncStatus('success','✅ Data sent to cloud');
+      toast('✅ Data uploaded (check your Google Sheet)');
+    }
+    
+  }catch(err){
+    console.error('Sync error:',err);
+    setSyncStatus('idle','');
+    toast('❌ Sync failed: '+err.message);
+  }
+  
+  setTimeout(()=>setSyncStatus('idle',''),3000);
+}
+
+async function loadFromCloud(){
+  const url=db.gsUrl||document.getElementById('gsUrl')?.value;
+  if(!url){
+    toast('⚠️ Please set your Google Apps Script URL in Settings first');
+    return;
+  }
+  
+  showLoading('📥 Loading data from cloud...');
+  
+  try{
+    const response=await fetch(url,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'read'}),
+      redirect:'follow'
+    });
+    
+    const text=await response.text();
+    console.log('Load response:',text);
+    
+    const data=JSON.parse(text);
+    
+    if(data.status==='success'&&data.records){
+      const existingDates=new Set(db.records.map(r=>r.user+'|'+r.date));
+      const newRecords=data.records.filter(r=>!existingDates.has(r.user+'|'+r.date));
+      
+      db.records=[...db.records,...newRecords];
+      save();
+      
+      hideLoading();
+      toast(`✅ Loaded ${data.count} records from cloud (${newRecords.length} new)`);
+      
+      if(document.getElementById('tab-dashboard').classList.contains('active')){
+        renderDashboard();
+      }
+    }else{
+      hideLoading();
+      toast('⚠️ No data found in cloud');
+    }
+    
+  }catch(err){
+    console.error('Load error:',err);
+    hideLoading();
+    toast('❌ Failed to load from cloud: '+err.message);
+  }
+}
+
+async function testConnection(){
+  const url=db.gsUrl||document.getElementById('gsUrl')?.value;
+  if(!url){
+    toast('⚠️ Please enter Google Apps Script URL first');
+    return;
+  }
+  
+  showLoading('🧪 Testing connection...');
+  
+  try{
+    const response=await fetch(url);
+    const text=await response.text();
+    
+    hideLoading();
+    
+    if(text.includes('BodyTrack API')){
+      toast('✅ Connection successful! Ready to sync.');
+    }else{
+      toast('⚠️ Got response but endpoint may be incorrect');
+    }
+  }catch(err){
+    hideLoading();
+    toast('❌ Connection failed. Check your URL.');
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   RENDER DASHBOARD
+═══════════════════════════════════════════════════════ */
 function renderDashboard(){
   const r=latestRecord(db.currentUser);
   if(!r){
     document.getElementById('statsRow').innerHTML='<div class="no-data"><div class="no-data-icon">📭</div>No records yet — add your first!</div>';
     return;
   }
+  
   const stats=[
     {label:'Weight',value:r.weight,unit:'kg',range:'54.7~74.0',color:'blue',s:getStatus(r.weight,54.7,74)},
     {label:'Muscle',value:r.muscle,unit:'kg',range:'27.4~33.5',color:'green',s:getStatus(r.muscle,27.4,33.5)},
@@ -531,6 +707,7 @@ function renderDashboard(){
     {label:'WHR',value:r.whr,unit:'ratio',range:'0.80~0.90',color:'blue',s:getStatus(r.whr,0.80,0.90)},
     {label:'FFM',value:r.ffm,unit:'kg',range:'47.0~58.5',color:'green',s:getStatus(r.ffm,47,58.5)},
   ];
+  
   document.getElementById('statsRow').innerHTML=stats.map(s=>`
     <div class="stat-card ${s.color}">
       <div class="stat-label">${s.label}</div>
@@ -593,9 +770,9 @@ function renderDashboard(){
     </div>`;
 
   document.getElementById('impedanceTable').innerHTML=`
-    <div style="font-size:.8rem;color:var(--muted);margin-bottom:8px">Bioelectrical Impedance (from latest scan)</div>
+    <div style="font-size:.8rem;color:var(--muted);margin-bottom:8px">Bioelectrical Impedance Analysis</div>
     <div style="padding:16px;background:var(--bg);border-radius:10px;text-align:center">
-      <div style="font-size:.85rem;color:var(--muted)">📊 Impedance data available in full scan records</div>
+      <div style="font-size:.85rem;color:var(--muted)">📊 Available in full scan records</div>
     </div>`;
 }
 
@@ -619,6 +796,7 @@ function renderBodyFigure(cid,seg,status,unit,type){
       ${msl('R.Leg',seg.rl,status.rl,unit,C,'top:140px;right:-60px')}
     </div>`;
 }
+
 function msl(name,val,st,unit,C,pos){
   return `<div style="position:absolute;${pos};background:#fff;border:1.5px solid ${C[st]||'#bdbdbd'};border-radius:7px;padding:3px 7px;font-size:.67rem;text-align:center;line-height:1.4;box-shadow:0 1px 4px rgba(0,0,0,.1);white-space:nowrap">
     <div style="font-weight:700;color:${C[st]}">${val}${unit}</div>
@@ -626,7 +804,9 @@ function msl(name,val,st,unit,C,pos){
   </div>`;
 }
 
-/* TREND CHART */
+/* ═══════════════════════════════════════════════════════
+   TREND CHART
+═══════════════════════════════════════════════════════ */
 function getFilteredRecords(){
   let recs=userRecords(db.currentUser);
   if(chartRangeMonths>0){
@@ -699,6 +879,7 @@ function renderTrendChart(){
     document.querySelector('.chart-canvas-wrap').innerHTML='<div class="no-data" style="padding:60px 0"><div class="no-data-icon">📉</div>No data for this range</div>';
     return;
   }
+  
   const wrap=document.querySelector('.chart-canvas-wrap');
   if(!wrap.querySelector('canvas')){
     wrap.innerHTML='<canvas id="trendChart"></canvas>';
@@ -773,7 +954,9 @@ function setRange(months){
   renderTrendChart();
 }
 
-/* RECORDS TABLE */
+/* ═══════════════════════════════════════════════════════
+   RECORDS TABLE
+═══════════════════════════════════════════════════════ */
 function renderRecords(filter=''){
   let rows=[...db.records].sort((a,b)=>b.date.localeCompare(a.date));
   if(filter)rows=rows.filter(r=>r.user.toLowerCase().includes(filter.toLowerCase())||r.date.includes(filter));
@@ -786,14 +969,18 @@ function renderRecords(filter=''){
       <td><button class="btn btn-danger" style="padding:4px 10px;font-size:.75rem" onclick="deleteRecord(${r.id})">🗑</button></td>
     </tr>`).join('')||'<tr><td colspan="11" style="text-align:center;padding:20px;color:var(--muted)">No records</td></tr>';
 }
+
 function filterRecords(v){renderRecords(v);}
+
 function deleteRecord(id){
   if(!confirm('Delete this record?'))return;
   db.records=db.records.filter(r=>r.id!==id);
   save();renderRecords();toast('Record deleted');
 }
 
-/* ADD RECORD MODAL */
+/* ═══════════════════════════════════════════════════════
+   ADD RECORD MODAL
+═══════════════════════════════════════════════════════ */
 function prepareAddModal(){
   const sel=document.getElementById('f-user');
   sel.innerHTML=db.users.map(u=>`<option ${u===db.currentUser?'selected':''}>${u}</option>`).join('');
@@ -851,13 +1038,18 @@ function saveRecord(){
   db.records.push(rec);
   save();
   closeModal('addModal');
-  toast('✅ Record saved!');
+  toast('✅ Record saved locally!');
   
   if(db.autoSync)syncToGoogleSheets();
-  renderDashboard();
+  
+  if(document.getElementById('tab-dashboard').classList.contains('active')){
+    renderDashboard();
+  }
 }
 
-/* ✅ NEW: IMAGE UPLOAD METHOD */
+/* ═══════════════════════════════════════════════════════
+   IMAGE UPLOAD
+═══════════════════════════════════════════════════════ */
 function handleImageUpload(event){
   const file=event.target.files[0];
   if(!file){
@@ -962,13 +1154,16 @@ function cancelExtract(){
   document.getElementById('ocrStatus').innerHTML='';
 }
 
-/* COMPARE */
+/* ═══════════════════════════════════════════════════════
+   COMPARE USERS
+═══════════════════════════════════════════════════════ */
 function renderCompare(){
   const metrics=['weight','muscle','fatMass','bmi','pbf','bmr'];
   const labels={weight:'Weight (kg)',muscle:'Muscle (kg)',fatMass:'Fat (kg)',bmi:'BMI',pbf:'PBF (%)',bmr:'BMR (kcal)'};
   const COLS=['color-blue','color-green','color-orange','color-purple','color-teal'];
   const maxes={weight:120,muscle:60,fatMass:40,bmi:35,pbf:40,bmr:2200};
   let html='';
+  
   db.users.forEach((u,i)=>{
     const r=latestRecord(u);if(!r)return;
     html+=`<div style="margin-bottom:16px"><div style="font-weight:700;font-size:.95rem;margin-bottom:8px;display:flex;align-items:center;gap:8px">
@@ -984,13 +1179,17 @@ function renderCompare(){
     });
     html+=`</div><hr style="border:none;border-top:1px solid var(--border);margin:10px 0">`;
   });
+  
   document.getElementById('compareSection').innerHTML=html||'<div class="no-data">No data</div>';
 }
 
-/* SETTINGS */
+/* ═══════════════════════════════════════════════════════
+   SETTINGS
+═══════════════════════════════════════════════════════ */
 function renderSettings(){
   document.getElementById('gsUrl').value=db.gsUrl||'';
   document.getElementById('autoSync').checked=db.autoSync!==false;
+  
   document.getElementById('userList').innerHTML=db.users.map(u=>`
     <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
       <div style="display:flex;align-items:center;gap:8px">
@@ -1005,8 +1204,8 @@ function renderSettings(){
 function addUser(){
   const n=document.getElementById('newUserName').value.trim();
   if(!n)return toast('Enter a name');
-  if(db.users.includes(n))return toast('Already exists');
-  db.users.push(n);save();renderSettings();toast(`✅ "${n}" added`);
+  if(db.users.includes(n))return toast('User exists');
+  db.users.push(n);save();renderSettings();toast(`✅ User "${n}" added`);
   document.getElementById('newUserName').value='';
 }
 
@@ -1014,7 +1213,7 @@ function removeUser(u){
   if(!confirm(`Remove "${u}"?`))return;
   db.users=db.users.filter(x=>x!==u);
   db.records=db.records.filter(r=>r.user!==u);
-  save();renderSettings();toast(`"${u}" removed`);
+  save();renderSettings();toast(`User "${u}" removed`);
 }
 
 function saveSettings(){
@@ -1024,11 +1223,13 @@ function saveSettings(){
 }
 
 function clearAllData(){
-  if(!confirm('Clear ALL data?'))return;
-  db.records=[];save();renderDashboard();toast('🗑 Cleared');
+  if(!confirm('Clear ALL local data? This cannot be undone!'))return;
+  db.records=[];save();renderDashboard();toast('🗑 Local data cleared');
 }
 
-/* USER SWITCH */
+/* ═══════════════════════════════════════════════════════
+   USER SWITCH
+═══════════════════════════════════════════════════════ */
 function renderUserSwitch(){
   document.getElementById('userSwitchList').innerHTML=db.users.map(u=>`
     <div onclick="switchUser('${u}')" style="display:flex;align-items:center;gap:12px;padding:12px;cursor:pointer;border-radius:10px;transition:.2s;${u===db.currentUser?'background:#e8f0fe':''}" onmouseover="this.style.background='#f0f4f8'" onmouseout="this.style.background='${u===db.currentUser?'#e8f0fe':''}'">
@@ -1045,34 +1246,9 @@ function switchUser(u){
   closeModal('userModal');renderDashboard();toast(`Switched to ${u}`);
 }
 
-/* GOOGLE SHEETS SYNC */
-function syncToGoogleSheets(){
-  const url=db.gsUrl||document.getElementById('gsUrl')?.value;
-  if(!url){
-    toast('💡 Cloud sync is optional. Add Google Sheets URL in Settings to enable.');
-    return;
-  }
-  const latest=latestRecord(db.currentUser);
-  if(!latest){toast('No data to sync');return;}
-  
-  toast('☁️ Syncing to cloud...');
-  fetch(url,{
-    method:'POST',
-    mode:'no-cors',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify(latest)
-  })
-  .then(()=>{
-    document.getElementById('lastSync').textContent=new Date().toLocaleTimeString();
-    toast('✅ Backup sent to Google Sheets!');
-  })
-  .catch((err)=>{
-    document.getElementById('lastSync').textContent=new Date().toLocaleTimeString();
-    toast('⚠️ Sync sent (CORS note: data is saved locally)');
-  });
-}
-
-/* CSV EXPORT */
+/* ═══════════════════════════════════════════════════════
+   CSV EXPORT
+═══════════════════════════════════════════════════════ */
 function exportCSV(){
   const h=['User','Date','Weight','Muscle','FatMass','TBW','FFM','BMI','PBF','WHR','BMR','MuscleCtrl','FatCtrl'];
   const rows=db.records.map(r=>[r.user,r.date,r.weight,r.muscle,r.fatMass,r.tbw,r.ffm,r.bmi,r.pbf,r.whr,r.bmr,r.mc,r.fc]);
@@ -1084,8 +1260,12 @@ function exportCSV(){
   toast('📥 CSV exported!');
 }
 
-/* INIT */
-renderDashboard();
+/* ═══════════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded',()=>{
+  renderDashboard();
+});
 </script>
 </body>
 </html>
