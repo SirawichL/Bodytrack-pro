@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Body Composition Tracker</title>
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --primary: #1a73e8;
+    --primary-dark: #1557b0;
+    --success: #34a853;
+    --warning: #fbbc04;
+    --danger: #ea4335;
+    --bg: #f0f4f8;
+    --card: #ffffff;
+    --text: #202124;
+    --muted: #5f6368;
+    --border: #dadce0;
+    --radius: 16px;
+    --shadow: 0 2px 12px rgba(0,0,0,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* HEADER */
+  header {
+    background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%);
+    color: #fff; padding: 0 24px; display: flex; align-items: center;
+    justify-content: space-between; height: 64px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2); position: sticky; top: 0; z-index: 100;
+  }
+  header h1 { font-size: 1.3rem; font-weight: 700; letter-spacing: .3px; }
+  header h1 span { opacity: .75; font-weight: 400; font-size: .85rem; display: block; }
+  .header-actions { display: flex; gap: 10px; align-items: center; }
+  .btn {
+    border: none; cursor: pointer; border-radius: 8px; font-size: .875rem;
+    font-weight: 600; padding: 8px 18px; transition: all .2s;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-primary { background: #fff; color: var(--primary); }
+  .btn-primary:hover { background: #e8f0fe; }
+  .btn-success { background: var(--success); color: #fff; }
+  .btn-success:hover { background: #2d8f47; }
+  .btn-danger  { background: var(--danger);  color: #fff; }
+  .btn-danger:hover  { background: #c62828; }
+  .btn-outline { background: transparent; color: #fff; border: 2px solid rgba(255,255,255,.6); }
+  .btn-outline:hover { background: rgba(255,255,255,.15); }
+  .btn-gray { background: #f1f3f4; color: var(--text); }
+  .btn-gray:hover { background: #e0e0e0; }
+
+  /* TABS */
+  .tabs { background: #fff; border-bottom: 1px solid var(--border); display: flex; padding: 0 24px; overflow-x: auto; }
+  .tab {
+    padding: 14px 20px; font-size: .9rem; font-weight: 600; color: var(--muted);
+    cursor: pointer; border-bottom: 3px solid transparent; white-space: nowrap; transition: all .2s;
+  }
+  .tab:hover { color: var(--primary); }
+  .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+  /* LAYOUT */
+  .container { max-width: 1200px; margin: 0 auto; padding: 24px 16px; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* CARDS */
+  .card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 24px; margin-bottom: 20px; }
+  .card-title { font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 18px; display: flex; align-items: center; gap: 8px; }
+  .card-title .icon { font-size: 1.2rem; }
+
+  /* GRID */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; }
+  @media(max-width:900px){ .grid-4{grid-template-columns:1fr 1fr;} .grid-3{grid-template-columns:1fr 1fr;} }
+  @media(max-width:600px){ .grid-2,.grid-3,.grid-4{grid-template-columns:1fr;} }
+
+  /* STAT CARDS */
+  .stat-card {
+    background: var(--card); border-radius: 12px; padding: 18px 16px;
+    box-shadow: var(--shadow); text-align: center; position: relative; overflow: hidden;
+  }
+  .stat-card::before { content:''; position:absolute; top:0; left:0; right:0; height:4px; }
+  .stat-card.blue::before   { background: var(--primary); }
+  .stat-card.green::before  { background: var(--success); }
+  .stat-card.orange::before { background: #ff6d00; }
+  .stat-card.purple::before { background: #7c4dff; }
+  .stat-card.red::before    { background: var(--danger); }
+  .stat-card.teal::before   { background: #00bcd4; }
+  .stat-label  { font-size: .75rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+  .stat-value  { font-size: 1.8rem; font-weight: 700; color: var(--text); line-height: 1; }
+  .stat-unit   { font-size: .85rem; color: var(--muted); margin-top: 4px; }
+  .stat-range  { font-size: .72rem; color: var(--muted); margin-top: 6px; background: var(--bg); border-radius: 99px; padding: 2px 10px; display: inline-block; }
+  .badge { display:inline-block; padding:2px 10px; border-radius:99px; font-size:.7rem; font-weight:700; text-transform:uppercase; margin-top:6px; }
+  .badge-normal { background:#e6f4ea; color:#1e7e34; }
+  .badge-over   { background:#fce8e6; color:#c62828; }
+  .badge-under  { background:#fff3e0; color:#e65100; }
+
+  /* PROGRESS BARS */
+  .progress-wrap { margin: 8px 0; }
+  .progress-label { display:flex; justify-content:space-between; font-size:.78rem; color:var(--muted); margin-bottom:4px; }
+  .progress-track { height:10px; background:#e0e0e0; border-radius:99px; overflow:hidden; }
+  .progress-fill  { height:100%; border-radius:99px; transition:width .6s ease; }
+  .progress-fill.normal { background: var(--success); }
+  .progress-fill.over   { background: var(--danger); }
+  .progress-fill.under  { background: var(--warning); }
+
+  /* ── TREND CHART CARD ── */
+  .chart-card {
+    background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: 24px; margin-bottom: 20px;
+  }
+  .chart-header {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 12px; margin-bottom: 18px;
+  }
+  .chart-title { font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  .chart-controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .chart-range-btn {
+    border: 1.5px solid var(--border); background: #fff; border-radius: 8px;
+    padding: 5px 14px; font-size: .78rem; font-weight: 600; cursor: pointer;
+    color: var(--muted); transition: all .18s;
+  }
+  .chart-range-btn:hover { border-color: var(--primary); color: var(--primary); }
+  .chart-range-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .chart-metric-toggle {
+    display: flex; gap: 6px; flex-wrap: wrap;
+  }
+  .metric-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    border-radius: 99px; padding: 4px 12px; font-size: .75rem; font-weight: 700;
+    cursor: pointer; border: 2px solid transparent; transition: all .18s; user-select: none;
+  }
+  .metric-chip.weight    { background:#e8f0fe; color:#1a73e8; border-color:#1a73e8; }
+  .metric-chip.muscle    { background:#e6f4ea; color:#34a853; border-color:#34a853; }
+  .metric-chip.fatmass   { background:#fff3e0; color:#ff6d00; border-color:#ff6d00; }
+  .metric-chip.bmi       { background:#f3e8ff; color:#7c4dff; border-color:#7c4dff; }
+  .metric-chip.pbf       { background:#fce8e6; color:#ea4335; border-color:#ea4335; }
+  .metric-chip.off       { background:#f1f3f4; color:#bbb; border-color:#e0e0e0; }
+  .chip-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  .chart-canvas-wrap { position: relative; height: 320px; width: 100%; }
+  .chart-legend {
+    display: flex; flex-wrap: wrap; gap: 14px; margin-top: 14px;
+    padding-top: 12px; border-top: 1px solid var(--border);
+  }
+  .legend-item { display:flex; align-items:center; gap:6px; font-size:.78rem; font-weight:600; color:var(--muted); }
+  .legend-dot  { width:12px; height:12px; border-radius:50%; flex-shrink:0; }
+  .legend-line { width:24px; height:3px; border-radius:2px; flex-shrink:0; }
+  /* Summary stat row inside chart card */
+  .chart-summary {
+    display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 16px;
+  }
+  .chart-stat {
+    background: var(--bg); border-radius: 10px; padding: 10px 16px; flex: 1; min-width: 120px; text-align: center;
+  }
+  .chart-stat-label { font-size:.7rem; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:.5px; }
+  .chart-stat-val   { font-size:1.3rem; font-weight:700; margin-top:2px; }
+  .chart-stat-delta { font-size:.75rem; margin-top:2px; font-weight:600; }
+  .delta-up   { color: var(--danger); }
+  .delta-down { color: var(--success); }
+  .delta-neutral { color: var(--muted); }
+
+  /* BODY SILHOUETTE */
+  .body-figure { display:flex; gap:30px; align-items:flex-start; justify-content:center; flex-wrap:wrap; }
+
+  /* FORM */
+  .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  @media(max-width:600px){ .form-grid{grid-template-columns:1fr;} }
+  .form-group { display:flex; flex-direction:column; gap:5px; }
+  .form-group label { font-size:.8rem; font-weight:600; color:var(--muted); }
+  .form-group input, .form-group select {
+    border:1.5px solid var(--border); border-radius:8px; padding:10px 12px;
+    font-size:.9rem; color:var(--text); background:#fafafa; transition:border-color .2s;
+  }
+  .form-group input:focus, .form-group select:focus { outline:none; border-color:var(--primary); background:#fff; }
+  .form-section-title {
+    font-size:.85rem; font-weight:700; color:var(--primary);
+    padding:6px 0; margin:12px 0 4px;
+    border-bottom:2px solid #e8f0fe; text-transform:uppercase; letter-spacing:.5px;
+  }
+
+  /* TABLE */
+  .table-wrap { overflow-x: auto; }
+  table { width:100%; border-collapse:collapse; font-size:.875rem; }
+  thead th { background:var(--primary); color:#fff; padding:12px 14px; text-align:left; font-weight:600; white-space:nowrap; }
+  thead th:first-child { border-radius:8px 0 0 0; }
+  thead th:last-child  { border-radius:0 8px 0 0; }
+  tbody tr { border-bottom:1px solid var(--border); transition:background .15s; }
+  tbody tr:hover { background:#f8f9ff; }
+  tbody td { padding:11px 14px; }
+  tbody td:first-child { font-weight:600; }
+
+  /* UPLOAD */
+  .upload-zone {
+    border:2.5px dashed var(--border); border-radius:12px; padding:36px 20px;
+    text-align:center; cursor:pointer; transition:all .2s; background:#fafafa;
+  }
+  .upload-zone:hover { border-color:var(--primary); background:#e8f0fe22; }
+  .upload-zone.dragover { border-color:var(--primary); background:#e8f0fe44; }
+  .upload-icon  { font-size:3rem; margin-bottom:10px; }
+  .upload-text  { font-size:.95rem; color:var(--muted); }
+  .upload-text strong { color:var(--primary); }
+  #preview-img  { max-width:100%; max-height:300px; border-radius:10px; margin-top:16px; display:none; border:2px solid var(--border); }
+
+  /* ALERT */
+  .alert { padding:12px 16px; border-radius:10px; font-size:.88rem; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+  .alert-info    { background:#e8f0fe; color:#1a73e8; }
+  .alert-success { background:#e6f4ea; color:#1e7e34; }
+
+  /* COMPARE */
+  .compare-row  { display:flex; align-items:center; gap:10px; padding:6px 0; font-size:.85rem; }
+  .compare-name { min-width:120px; font-weight:600; color:var(--muted); }
+  .compare-bar  { flex:1; height:6px; background:#e0e0e0; border-radius:99px; overflow:hidden; }
+  .compare-fill { height:100%; border-radius:99px; transition:width .6s; }
+  .compare-val  { min-width:60px; text-align:right; font-weight:700; font-size:.82rem; }
+  .color-blue   { background:var(--primary); }
+  .color-green  { background:var(--success); }
+  .color-orange { background:#ff6d00; }
+  .color-purple { background:#7c4dff; }
+  .color-teal   { background:#00bcd4; }
+
+  /* SETTINGS */
+  .settings-row { display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--border); }
+  .settings-row:last-child { border-bottom:none; }
+  .settings-label { font-size:.9rem; font-weight:600; }
+  .settings-sub   { font-size:.78rem; color:var(--muted); margin-top:2px; }
+  .toggle { position:relative; width:44px; height:24px; }
+  .toggle input { opacity:0; width:0; height:0; }
+  .toggle-slider { position:absolute; cursor:pointer; inset:0; background:#ccc; border-radius:24px; transition:.3s; }
+  .toggle-slider::before { content:''; position:absolute; width:18px; height:18px; background:#fff; border-radius:50%; left:3px; top:3px; transition:.3s; }
+  .toggle input:checked + .toggle-slider { background:var(--primary); }
+  .toggle input:checked + .toggle-slider::before { transform:translateX(20px); }
+
+  /* SYNC BAR */
+  .sync-bar {
+    background:linear-gradient(135deg,#e8f5e9,#f1f8e9); border:1px solid #a5d6a7;
+    border-radius:10px; padding:10px 16px; display:flex; align-items:center; gap:10px;
+    margin-bottom:20px; font-size:.85rem; color:#2e7d32;
+  }
+  .sync-dot { width:10px; height:10px; border-radius:50%; background:var(--success); animation:pulse 2s infinite; }
+  @keyframes pulse{ 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.3)} }
+
+  /* MODAL */
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:200; align-items:center; justify-content:center; padding:16px; }
+  .modal-overlay.show { display:flex; }
+  .modal { background:#fff; border-radius:var(--radius); max-width:680px; width:100%; max-height:90vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,.3); }
+  .modal-header { padding:20px 24px 16px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; background:#fff; z-index:1; }
+  .modal-header h2 { font-size:1.1rem; font-weight:700; }
+  .modal-close { background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--muted); line-height:1; }
+  .modal-body   { padding:20px 24px; }
+  .modal-footer { padding:16px 24px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:10px; }
+
+  /* USER CHIP */
+  .user-chip { display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,.2); border-radius:99px; padding:4px 12px; font-size:.8rem; font-weight:600; color:#fff; cursor:pointer; transition:background .2s; }
+  .user-chip:hover { background:rgba(255,255,255,.3); }
+  .avatar { width:26px; height:26px; border-radius:50%; background:var(--warning); display:flex; align-items:center; justify-content:center; font-size:.75rem; font-weight:800; color:#fff; }
+
+  /* TOAST */
+  #toast { position:fixed; bottom:24px; right:24px; z-index:999; background:#323232; color:#fff; padding:12px 20px; border-radius:8px; font-size:.875rem; font-weight:600; opacity:0; transform:translateY(20px); transition:all .3s; pointer-events:none; }
+  #toast.show { opacity:1; transform:translateY(0); }
+
+  /* NO DATA */
+  .no-data { text-align:center; padding:40px 20px; color:var(--muted); }
+  .no-data .no-data-icon { font-size:3rem; margin-bottom:10px; }
+</style>
+</head>
+<body>
+
+<!-- ══════════ HEADER ══════════ -->
+<header>
+  <div>
+    <h1>💪 BodyTrack Pro
+      <span>Body Composition Analytics</span>
+    </h1>
+  </div>
+  <div class="header-actions">
+    <div class="user-chip" onclick="openModal('userModal')">
+      <div class="avatar" id="avatarInitial">K</div>
+      <span id="currentUserName">Krit</span> ▾
+    </div>
+    <button class="btn btn-outline" onclick="syncToGoogleSheets()">☁️ Sync</button>
+    <button class="btn btn-primary" onclick="openModal('addModal')">＋ Add Record</button>
+  </div>
+</header>
+
+<!-- ══════════ TABS ══════════ -->
+<div class="tabs">
+  <div class="tab active"  onclick="switchTab('dashboard')">📊 Dashboard</div>
+  <div class="tab"         onclick="switchTab('records')">📋 Records</div>
+  <div class="tab"         onclick="switchTab('upload')">📷 Scan Report</div>
+  <div class="tab"         onclick="switchTab('compare')">👥 Compare Users</div>
+  <div class="tab"         onclick="switchTab('settings')">⚙️ Settings</div>
+</div>
+
+<div class="container">
+
+  <!-- ══════════════════════════════════
+       DASHBOARD TAB
+  ══════════════════════════════════ -->
+  <div id="tab-dashboard" class="tab-content active">
+
+    <div class="sync-bar">
+      <div class="sync-dot"></div>
+      <span>Connected to Google Sheets · Last synced: <strong id="lastSync">Just now</strong></span>
+    </div>
+
+    <!-- Stat Cards -->
+    <div class="grid-4" id="statsRow"></div>
+
+    <!-- ── TREND LINE CHART ── -->
+    <div class="chart-card" style="margin-top:20px">
+      <div class="chart-header">
+        <div class="chart-title">
+          <span>📈</span>
+          <span>Trends Over Time</span>
+        </div>
+        <div class="chart-controls">
+          <!-- Range Filters -->
+          <div style="display:flex;gap:6px">
+            <button class="chart-range-btn" onclick="setRange(1)">1M</button>
+            <button class="chart-range-btn active" onclick="setRange(3)">3M</button>
+            <button class="chart-range-btn" onclick="setRange(6)">6M</button>
+            <button class="chart-range-btn" onclick="setRange(12)">1Y</button>
+            <button class="chart-range-btn" onclick="setRange(0)">All</button>
+          </div>
+          <!-- Metric Toggles -->
+          <div class="chart-metric-toggle" id="metricToggles"></div>
+        </div>
+      </div>
+
+      <!-- Mini summary row -->
+      <div class="chart-summary" id="chartSummary"></div>
+
+      <!-- Canvas -->
+      <div class="chart-canvas-wrap">
+        <canvas id="trendChart"></canvas>
+      </div>
+
+      <!-- Legend -->
+      <div class="chart-legend" id="chartLegend"></div>
+    </div>
+
+    <!-- Body Comp + Obesity -->
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title"><span class="icon">⚖️</span> Body Composition</div>
+        <div id="bodyCompBars"></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="icon">🩺</span> Obesity Diagnosis</div>
+        <div id="obesityBars"></div>
+      </div>
+    </div>
+
+    <!-- Segmental -->
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title"><span class="icon">🦾</span> Segmental Lean Mass</div>
+        <div class="body-figure" id="leanFigure"></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="icon">🔥</span> Segmental Fat Mass</div>
+        <div class="body-figure" id="fatFigure"></div>
+      </div>
+    </div>
+
+    <!-- Muscle-Fat Control + Impedance -->
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title"><span class="icon">🎯</span> Muscle-Fat Control</div>
+        <div id="muscleFatControl"></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="icon">⚡</span> Impedance</div>
+        <div id="impedanceTable"></div>
+      </div>
+    </div>
+
+  </div><!-- /tab-dashboard -->
+
+  <!-- ══════════════════════════════════
+       RECORDS TAB
+  ══════════════════════════════════ -->
+  <div id="tab-records" class="tab-content">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+        <div class="card-title" style="margin:0"><span class="icon">📋</span> All Records</div>
+        <div style="display:flex;gap:8px">
+          <input style="border:1.5px solid var(--border);border-radius:8px;padding:7px 12px;font-size:.85rem" placeholder="🔍 Search..." oninput="filterRecords(this.value)"/>
+          <button class="btn btn-success" onclick="exportCSV()">⬇ Export CSV</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table id="recordsTable">
+          <thead>
+            <tr>
+              <th>User</th><th>Date</th><th>Weight</th><th>Muscle</th>
+              <th>Fat Mass</th><th>BMI</th><th>PBF%</th><th>BMR</th>
+              <th>WHR</th><th>Status</th><th></th>
+            </tr>
+          </thead>
+          <tbody id="recordsTbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       UPLOAD TAB
+  ══════════════════════════════════ -->
+  <div id="tab-upload" class="tab-content">
+    <div class="card">
+      <div class="card-title"><span class="icon">📷</span> Scan Body Composition Report</div>
+      <div class="alert alert-info">📌 Upload a photo of your InBody / body composition printout. Confirm values before saving.</div>
+      <div class="upload-zone" id="uploadZone"
+           onclick="document.getElementById('fileInput').click()"
+           ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropFile(event)">
+        <div class="upload-icon">📄</div>
+        <div class="upload-text">Drag & drop your report image, or <strong>click to browse</strong></div>
+        <div style="font-size:.78rem;color:var(--muted);margin-top:6px">Supports JPG, PNG, HEIC</div>
+        <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="handleFileSelect(event)"/>
+      </div>
+      <img id="preview-img" alt="Report preview"/>
+      <div id="extractedForm" style="display:none;margin-top:20px">
+        <div class="alert alert-success">✅ Review and confirm values below before saving.</div>
+        <div class="form-grid" id="extractedFields"></div>
+        <div style="display:flex;gap:10px;margin-top:16px">
+          <button class="btn btn-success" onclick="saveExtracted()">✅ Confirm & Save</button>
+          <button class="btn btn-gray"    onclick="cancelExtract()">✖ Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       COMPARE TAB
+  ══════════════════════════════════ -->
+  <div id="tab-compare" class="tab-content">
+    <div class="card">
+      <div class="card-title"><span class="icon">👥</span> User Comparison</div>
+      <div id="compareSection"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       SETTINGS TAB
+  ══════════════════════════════════ -->
+  <div id="tab-settings" class="tab-content">
+    <div class="card">
+      <div class="card-title"><span class="icon">⚙️</span> Settings</div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-label">Google Sheets URL</div>
+          <div class="settings-sub">Paste your Google Apps Script Web App URL here</div>
+        </div>
+        <input id="gsUrl" style="border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;font-size:.82rem;width:340px" placeholder="https://script.google.com/macros/s/..."/>
+      </div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-label">Auto-sync on save</div>
+          <div class="settings-sub">Push data to Google Sheets when a record is saved</div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="autoSync" checked/><span class="toggle-slider"></span></label>
+      </div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-label">Dark Mode</div>
+          <div class="settings-sub">Switch to dark theme</div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="darkMode" onchange="toggleDark(this)"/><span class="toggle-slider"></span></label>
+      </div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-label">Weight Unit</div>
+          <div class="settings-sub">kg or lbs</div>
+        </div>
+        <select style="border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;font-size:.85rem">
+          <option>kg</option><option>lbs</option>
+        </select>
+      </div>
+      <div style="margin-top:16px;display:flex;gap:10px">
+        <button class="btn btn-primary" onclick="saveSettings()">💾 Save Settings</button>
+        <button class="btn btn-danger"  onclick="clearAllData()">🗑 Clear All Data</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="icon">👤</span> Manage Users</div>
+      <div id="userList" style="margin-bottom:12px"></div>
+      <div style="display:flex;gap:8px">
+        <input id="newUserName" style="border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;font-size:.875rem;flex:1" placeholder="New user name..."/>
+        <button class="btn btn-success" onclick="addUser()">＋ Add User</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<!-- ══════════ ADD RECORD MODAL ══════════ -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>➕ Add Body Composition Record</h2>
+      <button class="modal-close" onclick="closeModal('addModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-section-title">👤 User & Date</div>
+      <div class="form-grid">
+        <div class="form-group"><label>User</label><select id="f-user"></select></div>
+        <div class="form-group"><label>Date</label><input type="date" id="f-date"/></div>
+      </div>
+      <div class="form-section-title">⚖️ Body Composition</div>
+      <div class="form-grid">
+        <div class="form-group"><label>Weight (kg)</label><input type="number" id="f-weight" placeholder="72.8" step="0.1"/></div>
+        <div class="form-group"><label>Muscle Mass (kg)</label><input type="number" id="f-muscle" placeholder="32.4" step="0.1"/></div>
+        <div class="form-group"><label>Body Fat Mass (kg)</label><input type="number" id="f-fatMass" placeholder="15.8" step="0.1"/></div>
+        <div class="form-group"><label>TBW (kg)</label><input type="number" id="f-tbw" placeholder="41.8" step="0.1"/></div>
+        <div class="form-group"><label>FFM (kg)</label><input type="number" id="f-ffm" placeholder="57.0" step="0.1"/></div>
+      </div>
+      <div class="form-section-title">🩺 Obesity Diagnosis</div>
+      <div class="form-grid">
+        <div class="form-group"><label>BMI (kg/m²)</label><input type="number" id="f-bmi" placeholder="24.9" step="0.1"/></div>
+        <div class="form-group"><label>PBF % (Body Fat %)</label><input type="number" id="f-pbf" placeholder="21.7" step="0.1"/></div>
+        <div class="form-group"><label>WHR</label><input type="number" id="f-whr" placeholder="0.88" step="0.01"/></div>
+        <div class="form-group"><label>BMR (kcal)</label><input type="number" id="f-bmr" placeholder="1602"/></div>
+      </div>
+      <div class="form-section-title">🦾 Segmental Lean (kg)</div>
+      <div class="form-grid">
+        <div class="form-group"><label>Left Arm</label><input type="number" id="f-sl-la" placeholder="3.2" step="0.1"/></div>
+        <div class="form-group"><label>Right Arm</label><input type="number" id="f-sl-ra" placeholder="3.2" step="0.1"/></div>
+        <div class="form-group"><label>Trunk</label><input type="number" id="f-sl-tr" placeholder="25.9" step="0.1"/></div>
+        <div class="form-group"><label>Left Leg</label><input type="number" id="f-sl-ll" placeholder="9.1" step="0.1"/></div>
+        <div class="form-group"><label>Right Leg</label><input type="number" id="f-sl-rl" placeholder="8.9" step="0.1"/></div>
+      </div>
+      <div class="form-section-title">🔥 Segmental Fat (%)</div>
+      <div class="form-grid">
+        <div class="form-group"><label>Left Arm %</label><input type="number" id="f-sf-la" placeholder="19.3" step="0.1"/></div>
+        <div class="form-group"><label>Right Arm %</label><input type="number" id="f-sf-ra" placeholder="19.1" step="0.1"/></div>
+        <div class="form-group"><label>Trunk %</label><input type="number" id="f-sf-tr" placeholder="23.3" step="0.1"/></div>
+        <div class="form-group"><label>Left Leg %</label><input type="number" id="f-sf-ll" placeholder="19.7" step="0.1"/></div>
+        <div class="form-group"><label>Right Leg %</label><input type="number" id="f-sf-rl" placeholder="20.0" step="0.1"/></div>
+      </div>
+      <div class="form-section-title">🎯 Muscle-Fat Control</div>
+      <div class="form-grid">
+        <div class="form-group"><label>Muscle Control (kg)</label><input type="number" id="f-mc" placeholder="0.0" step="0.1"/></div>
+        <div class="form-group"><label>Fat Control (kg)</label><input type="number" id="f-fc" placeholder="-5.7" step="0.1"/></div>
+      </div>
+      <div class="form-section-title">⚡ Impedance (Ω)</div>
+      <div class="form-grid">
+        <div class="form-group"><label>RA 20kHz</label><input type="number" id="f-z-ra20" placeholder="305.2"/></div>
+        <div class="form-group"><label>LA 20kHz</label><input type="number" id="f-z-la20" placeholder="307.5"/></div>
+        <div class="form-group"><label>TR 20kHz</label><input type="number" id="f-z-tr20" placeholder="26.6"/></div>
+        <div class="form-group"><label>RL 20kHz</label><input type="number" id="f-z-rl20" placeholder="264.4"/></div>
+        <div class="form-group"><label>LL 20kHz</label><input type="number" id="f-z-ll20" placeholder="249.9"/></div>
+        <div class="form-group"><label>RA 100kHz</label><input type="number" id="f-z-ra100" placeholder="267.0"/></div>
+        <div class="form-group"><label>LA 100kHz</label><input type="number" id="f-z-la100" placeholder="269.9"/></div>
+        <div class="form-group"><label>TR 100kHz</label><input type="number" id="f-z-tr100" placeholder="22.2"/></div>
+        <div class="form-group"><label>RL 100kHz</label><input type="number" id="f-z-rl100" placeholder="229.6"/></div>
+        <div class="form-group"><label>LL 100kHz</label><input type="number" id="f-z-ll100" placeholder="217.8"/></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-gray"    onclick="closeModal('addModal')">Cancel</button>
+      <button class="btn btn-success" onclick="saveRecord()">💾 Save Record</button>
+    </div>
+  </div>
+</div>
+
+<!-- USER SWITCH MODAL -->
+<div class="modal-overlay" id="userModal">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-header">
+      <h2>👤 Switch User</h2>
+      <button class="modal-close" onclick="closeModal('userModal')">×</button>
+    </div>
+    <div class="modal-body" id="userSwitchList"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- ══════════════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════════════ -->
+<script>
+/* ─────────────────────────────────────────────────────
+   SEED DATA  –  6 months of realistic records for demo
+───────────────────────────────────────────────────── */
+function makeSeedRecords() {
+  // (user, date, weight, muscle, fatMass, tbw, ffm, bmi, pbf, whr, bmr)
+  const base = [
+    ['Krit','2025-12-05', 75.2, 31.8, 17.4, 40.1, 55.8, 25.8, 23.1, 0.90, 1578],
+    ['Krit','2026-01-10', 74.5, 32.0, 16.9, 40.5, 56.2, 25.5, 22.7, 0.89, 1585],
+    ['Krit','2026-02-08', 73.8, 32.1, 16.2, 40.8, 56.6, 25.2, 22.0, 0.89, 1591],
+    ['Krit','2026-03-05', 73.2, 32.3, 15.9, 41.2, 57.0, 25.0, 21.7, 0.88, 1596],
+    ['Krit','2026-04-02', 72.9, 32.3, 15.8, 41.6, 57.0, 24.9, 21.7, 0.88, 1600],
+    ['Krit','2026-05-05', 72.8, 32.4, 15.8, 41.8, 57.0, 24.9, 21.7, 0.88, 1602],
+    ['Alice','2026-02-10',60.1, 24.2, 14.5, 33.1, 44.8, 22.8, 24.1, 0.80, 1320],
+    ['Alice','2026-03-12',59.5, 24.5, 13.8, 33.4, 45.1, 22.5, 23.2, 0.79, 1328],
+    ['Alice','2026-04-15',58.9, 24.7, 13.2, 33.8, 45.5, 22.2, 22.4, 0.79, 1335],
+    ['Alice','2026-05-05',58.3, 25.0, 12.8, 34.1, 45.9, 22.0, 22.0, 0.78, 1341],
+    ['Bob',  '2026-01-08',88.0, 38.5, 24.1, 47.2, 61.8, 27.1, 27.4, 0.94, 1820],
+    ['Bob',  '2026-03-10',86.2, 38.8, 23.0, 47.8, 62.2, 26.5, 26.7, 0.93, 1831],
+    ['Bob',  '2026-05-05',84.5, 39.1, 22.0, 48.1, 62.7, 26.0, 26.0, 0.92, 1845],
+  ];
+  return base.map(r => ({
+    id: Date.now() + Math.random(),
+    user:r[0], date:r[1],
+    weight:r[2], muscle:r[3], fatMass:r[4], tbw:r[5], ffm:r[6],
+    bmi:r[7], pbf:r[8], whr:r[9], bmr:r[10],
+    sl:{la:3.2,ra:3.2,tr:25.9,ll:9.1,rl:8.9},
+    sf:{la:19.3,ra:19.1,tr:23.3,ll:19.7,rl:20.0},
+    mc:0, fc:-5.7,
+    z:{ra20:305.2,la20:307.5,tr20:26.6,rl20:264.4,ll20:249.9,
+       ra100:267,la100:269.9,tr100:22.2,rl100:229.6,ll100:217.8}
+  }));
+}
+
+/* ─────────────────────────────────────────────────────
+   DB
+───────────────────────────────────────────────────── */
+let db = JSON.parse(localStorage.getItem('bodytrack_db')||'null') || {
+  users:['Krit','Alice','Bob'],
+  currentUser:'Krit',
+  records: makeSeedRecords(),
+  gsUrl:'', autoSync:true
+};
+function save(){ localStorage.setItem('bodytrack_db',JSON.stringify(db)); }
+function latestRecord(u){ return db.records.filter(r=>r.user===u).sort((a,b)=>b.date.localeCompare(a.date))[0]||null; }
+function userRecords(u){ return db.records.filter(r=>r.user===u).sort((a,b)=>a.date.localeCompare(b.date)); }
+
+/* ─────────────────────────────────────────────────────
+   CHART STATE
+───────────────────────────────────────────────────── */
+let trendChart = null;
+let chartRangeMonths = 3;   // default 3M
+const METRICS = {
+  weight:  { label:'Weight',    unit:'kg', color:'#1a73e8', bg:'rgba(26,115,232,0.12)',  yAxis:'yLeft'  },
+  muscle:  { label:'Muscle',    unit:'kg', color:'#34a853', bg:'rgba(52,168,83,0.12)',   yAxis:'yLeft'  },
+  fatmass: { label:'Fat Mass',  unit:'kg', color:'#ff6d00', bg:'rgba(255,109,0,0.12)',   yAxis:'yLeft'  },
+  bmi:     { label:'BMI',       unit:'',   color:'#7c4dff', bg:'rgba(124,77,255,0.12)',  yAxis:'yRight' },
+  pbf:     { label:'Body Fat%', unit:'%',  color:'#ea4335', bg:'rgba(234,67,53,0.12)',   yAxis:'yRight' },
+};
+let activeMetrics = { weight:true, muscle:true, fatmass:false, bmi:false, pbf:false };
+
+/* ─────────────────────────────────────────────────────
+   TABS
+───────────────────────────────────────────────────── */
+function switchTab(name){
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  const idx = ['dashboard','records','upload','compare','settings'].indexOf(name);
+  document.querySelectorAll('.tab')[idx].classList.add('active');
+  if(name==='dashboard') renderDashboard();
+  if(name==='records')   renderRecords();
+  if(name==='compare')   renderCompare();
+  if(name==='settings')  renderSettings();
+}
+
+/* ─────────────────────────────────────────────────────
+   MODALS
+───────────────────────────────────────────────────── */
+function openModal(id){
+  document.getElementById(id).classList.add('show');
+  if(id==='addModal')  prepareAddModal();
+  if(id==='userModal') renderUserSwitch();
+}
+function closeModal(id){ document.getElementById(id).classList.remove('show'); }
+
+/* ─────────────────────────────────────────────────────
+   TOAST
+───────────────────────────────────────────────────── */
+function toast(msg,dur=2800){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),dur);
+}
+
+/* ─────────────────────────────────────────────────────
+   HELPERS
+───────────────────────────────────────────────────── */
+function getStatus(v,min,max){ return v<min?'under':v>max?'over':'normal'; }
+
+/* ─────────────────────────────────────────────────────
+   RENDER DASHBOARD
+───────────────────────────────────────────────────── */
+function renderDashboard(){
+  const r = latestRecord(db.currentUser);
+
+  // ── Stat cards ──
+  if(!r){
+    document.getElementById('statsRow').innerHTML='<div class="no-data"><div class="no-data-icon">📭</div>No records yet — add your first measurement!</div>';
+    return;
+  }
+  const stats=[
+    {label:'Weight',    value:r.weight, unit:'kg',     range:'54.7~74.0',  color:'blue',   s:getStatus(r.weight,54.7,74)},
+    {label:'Muscle',    value:r.muscle, unit:'kg',     range:'27.4~33.5',  color:'green',  s:getStatus(r.muscle,27.4,33.5)},
+    {label:'Body Fat',  value:r.fatMass,unit:'kg',     range:'7.7~15.4',   color:'orange', s:getStatus(r.fatMass,7.7,15.4)},
+    {label:'BMI',       value:r.bmi,    unit:'kg/m²',  range:'18.5~25.0',  color:'purple', s:getStatus(r.bmi,18.5,25)},
+    {label:'PBF',       value:r.pbf,    unit:'%',      range:'10.0~20.0',  color:'red',    s:getStatus(r.pbf,10,20)},
+    {label:'BMR',       value:r.bmr,    unit:'kcal',   range:'1573~1840',  color:'teal',   s:getStatus(r.bmr,1573,1840)},
+    {label:'WHR',       value:r.whr,    unit:'ratio',  range:'0.80~0.90',  color:'blue',   s:getStatus(r.whr,0.80,0.90)},
+    {label:'FFM',       value:r.ffm,    unit:'kg',     range:'47.0~58.5',  color:'green',  s:getStatus(r.ffm,47,58.5)},
+  ];
+  document.getElementById('statsRow').innerHTML=stats.map(s=>`
+    <div class="stat-card ${s.color}">
+      <div class="stat-label">${s.label}</div>
+      <div class="stat-value">${s.value}</div>
+      <div class="stat-unit">${s.unit}</div>
+      <div class="stat-range">${s.range}</div>
+      <span class="badge badge-${s.s}">${s.s.toUpperCase()}</span>
+    </div>`).join('');
+
+  // ── Render trend chart ──
+  renderTrendChart();
+
+  // ── Body Comp bars ──
+  const bco=[
+    {name:'Weight',    val:r.weight,  min:54.7,max:74.0, maxBar:120},
+    {name:'Muscle',    val:r.muscle,  min:27.4,max:33.5, maxBar:60},
+    {name:'Body Fat',  val:r.fatMass, min:7.7, max:15.4, maxBar:40},
+    {name:'TBW',       val:r.tbw,     min:36.2,max:44.2, maxBar:60},
+    {name:'FFM',       val:r.ffm,     min:47.0,max:58.5, maxBar:80},
+  ];
+  document.getElementById('bodyCompBars').innerHTML=bco.map(b=>{
+    const pct=Math.min(100,(b.val/b.maxBar)*100);
+    const st=getStatus(b.val,b.min,b.max);
+    return `<div class="progress-wrap">
+      <div class="progress-label"><span>${b.name}</span><span>${b.val} kg &nbsp;|&nbsp; <small>${b.min}~${b.max}</small></span></div>
+      <div class="progress-track"><div class="progress-fill ${st}" style="width:${pct}%"></div></div>
+    </div>`;
+  }).join('');
+
+  // ── Obesity bars ──
+  const obd=[
+    {name:'BMI', val:r.bmi,  min:18.5,max:25.0,maxBar:35,  unit:'kg/m²'},
+    {name:'PBF', val:r.pbf,  min:10,  max:20,  maxBar:40,  unit:'%'},
+    {name:'WHR', val:r.whr,  min:0.80,max:0.90,maxBar:1.2, unit:''},
+    {name:'BMR', val:r.bmr,  min:1573,max:1840,maxBar:2200,unit:' kcal'},
+  ];
+  document.getElementById('obesityBars').innerHTML=obd.map(b=>{
+    const pct=Math.min(100,(b.val/b.maxBar)*100);
+    const st=getStatus(b.val,b.min,b.max);
+    return `<div class="progress-wrap">
+      <div class="progress-label"><span>${b.name}</span><span>${b.val}${b.unit} &nbsp;|&nbsp; <small>${b.min}~${b.max}</small></span></div>
+      <div class="progress-track"><div class="progress-fill ${st}" style="width:${pct}%"></div></div>
+    </div>`;
+  }).join('');
+
+  // ── Segmental ──
+  renderBodyFigure('leanFigure',r.sl,{la:'Normal',ra:'Normal',tr:'Normal',ll:'Normal',rl:'Normal'},'kg','Lean');
+  renderBodyFigure('fatFigure', r.sf,{la:'Normal',ra:'Normal',tr:'Over',  ll:'Normal',rl:'Normal'},'%','Fat');
+
+  // ── Muscle-Fat control ──
+  document.getElementById('muscleFatControl').innerHTML=`
+    <div style="display:flex;gap:16px;flex-wrap:wrap">
+      <div class="stat-card green" style="flex:1;min-width:140px">
+        <div class="stat-label">Muscle Control</div>
+        <div class="stat-value">${r.mc>=0?'+':''}${r.mc}</div>
+        <div class="stat-unit">kg</div>
+        <span class="badge ${r.mc>=0?'badge-normal':'badge-under'}">${r.mc>=0?'Good':'Need Work'}</span>
+      </div>
+      <div class="stat-card ${r.fc<=0?'green':'red'}" style="flex:1;min-width:140px">
+        <div class="stat-label">Fat Control</div>
+        <div class="stat-value">${r.fc>0?'+':''}${r.fc}</div>
+        <div class="stat-unit">kg</div>
+        <span class="badge ${r.fc<=0?'badge-normal':'badge-over'}">${r.fc<=0?'Reducing ✓':'Increasing'}</span>
+      </div>
+    </div>`;
+
+  // ── Impedance ──
+  const z=r.z;
+  document.getElementById('impedanceTable').innerHTML=`
+    <div style="font-size:.8rem;color:var(--muted);margin-bottom:8px">Bioelectrical Impedance (Ω)</div>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>Freq</th><th>RA</th><th>LA</th><th>TR</th><th>RL</th><th>LL</th></tr></thead>
+      <tbody>
+        <tr><td>20kHz</td><td>${z.ra20}</td><td>${z.la20}</td><td>${z.tr20}</td><td>${z.rl20}</td><td>${z.ll20}</td></tr>
+        <tr><td>100kHz</td><td>${z.ra100}</td><td>${z.la100}</td><td>${z.tr100}</td><td>${z.rl100}</td><td>${z.ll100}</td></tr>
+      </tbody>
+    </table></div>
+    <div style="font-size:.72rem;color:var(--muted);margin-top:6px">* Use results as reference when consulting your physician.</div>`;
+}
+
+/* ─────────────────────────────────────────────────────
+   TREND CHART  ◀ MAIN NEW FEATURE ▶
+───────────────────────────────────────────────────── */
+function getFilteredRecords(){
+  let recs = userRecords(db.currentUser);
+  if(chartRangeMonths > 0){
+    const cutoff = new Date();
+    cutoff.setMonth(cutoff.getMonth() - chartRangeMonths);
+    recs = recs.filter(r => new Date(r.date) >= cutoff);
+  }
+  return recs;
+}
+
+function buildChartDatasets(recs){
+  return Object.entries(METRICS)
+    .filter(([key])=>activeMetrics[key])
+    .map(([key,m])=>{
+      const field = key==='fatmass'?'fatMass':key==='pbf'?'pbf':key;
+      return {
+        label: m.label + (m.unit?' ('+m.unit+')':''),
+        data: recs.map(r=> r[field] ?? r[key] ?? null),
+        borderColor: m.color,
+        backgroundColor: m.bg,
+        borderWidth: 2.5,
+        pointBackgroundColor: m.color,
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2,
+        pointRadius: 5,
+        pointHoverRadius: 7,
+        tension: 0.35,
+        fill: true,
+        yAxisID: m.yAxis,
+      };
+    });
+}
+
+function renderTrendChart(){
+  const recs = getFilteredRecords();
+
+  // ── Metric toggle chips ──
+  document.getElementById('metricToggles').innerHTML = Object.entries(METRICS).map(([key,m])=>`
+    <div class="metric-chip ${activeMetrics[key]?key:'off'}" onclick="toggleMetric('${key}')" title="Toggle ${m.label}">
+      <span class="chip-dot" style="background:${activeMetrics[key]?m.color:'#bbb'}"></span>
+      ${m.label}
+    </div>`).join('');
+
+  // ── Chart summary strip ──
+  const active = Object.entries(METRICS).filter(([k])=>activeMetrics[k]);
+  document.getElementById('chartSummary').innerHTML = active.map(([key,m])=>{
+    const field = key==='fatmass'?'fatMass':key;
+    if(recs.length<1) return '';
+    const first = recs[0][field]??0;
+    const last  = recs[recs.length-1][field]??0;
+    const delta = (last-first).toFixed(1);
+    const dClass = delta>0?'delta-up':delta<0?'delta-down':'delta-neutral';
+    const dSign  = delta>0?'▲':delta<0?'▼':'–';
+    return `<div class="chart-stat">
+      <div class="chart-stat-label" style="color:${m.color}">${m.label}</div>
+      <div class="chart-stat-val" style="color:${m.color}">${last}${m.unit}</div>
+      <div class="chart-stat-delta ${dClass}">${dSign} ${Math.abs(delta)}${m.unit} vs ${recs.length>1?recs[0].date:'start'}</div>
+    </div>`;
+  }).join('');
+
+  // ── Build labels ──
+  const labels = recs.map(r=>{
+    const d=new Date(r.date);
+    return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  });
+
+  // ── Determine if we need dual axis ──
+  const useDualAxis = active.some(([k,m])=>m.yAxis==='yRight') && active.some(([k,m])=>m.yAxis==='yLeft');
+
+  const datasets = buildChartDatasets(recs);
+
+  // ── Destroy old chart ──
+  if(trendChart){ trendChart.destroy(); trendChart=null; }
+
+  if(recs.length===0){
+    document.querySelector('.chart-canvas-wrap').innerHTML=
+      '<div class="no-data" style="padding:60px 0"><div class="no-data-icon">📉</div>No data for this range — try a wider range or add records.</div>';
+    return;
+  }
+  // Restore canvas if replaced
+  const wrap = document.querySelector('.chart-canvas-wrap');
+  if(!wrap.querySelector('canvas')){
+    wrap.innerHTML='<canvas id="trendChart"></canvas>';
+  }
+
+  const ctx = document.getElementById('trendChart').getContext('2d');
+
+  trendChart = new Chart(ctx, {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode:'index', intersect:false },
+      plugins: {
+        legend: { display:false },   // we have custom legend
+        tooltip: {
+          backgroundColor: 'rgba(32,33,36,0.92)',
+          titleColor:'#fff',
+          bodyColor:'#e8eaed',
+          padding:12,
+          cornerRadius:10,
+          callbacks:{
+            title: ctx => '📅 ' + ctx[0].label,
+            label: ctx => {
+              const k = Object.keys(METRICS).filter(k=>activeMetrics[k])[ctx.datasetIndex];
+              const m = METRICS[k];
+              return `  ${m.label}: ${ctx.parsed.y}${m.unit}`;
+            }
+          }
+        },
+      },
+      scales: {
+        x:{
+          grid:{ color:'rgba(0,0,0,0.04)' },
+          ticks:{ font:{size:11}, color:'#5f6368' },
+        },
+        yLeft:{
+          type:'linear', position:'left',
+          grid:{ color:'rgba(0,0,0,0.06)' },
+          ticks:{ font:{size:11}, color:'#5f6368', callback: v=>v+' kg' },
+          title:{ display:true, text:'kg', color:'#5f6368', font:{size:11} },
+        },
+        yRight:{
+          type:'linear', position:'right',
+          display: useDualAxis,
+          grid:{ drawOnChartArea:false },
+          ticks:{ font:{size:11}, color:'#9e9e9e' },
+          title:{ display:useDualAxis, text:'BMI / %', color:'#9e9e9e', font:{size:11} },
+        },
+      },
+    }
+  });
+
+  // ── Custom legend ──
+  document.getElementById('chartLegend').innerHTML = active.map(([key,m])=>`
+    <div class="legend-item">
+      <div class="legend-line" style="background:${m.color}"></div>
+      <div class="legend-dot" style="background:${m.color}"></div>
+      ${m.label}${m.unit?' ('+m.unit+')':''}
+    </div>`).join('');
+}
+
+/* Toggle a metric on/off */
+function toggleMetric(key){
+  activeMetrics[key] = !activeMetrics[key];
+  // ensure at least one active
+  if(!Object.values(activeMetrics).some(Boolean)) activeMetrics[key]=true;
+  renderTrendChart();
+}
+
+/* Set date range */
+function setRange(months){
+  chartRangeMonths = months;
+  document.querySelectorAll('.chart-range-btn').forEach((b,i)=>{
+    b.classList.toggle('active',[1,3,6,12,0][i]===months);
+  });
+  renderTrendChart();
+}
+
+/* ─────────────────────────────────────────────────────
+   BODY SILHOUETTE
+───────────────────────────────────────────────────── */
+function renderBodyFigure(cid, seg, status, unit, type){
+  const C={Normal:'#34a853',Over:'#ea4335',Under:'#fbbc04'};
+  document.getElementById(cid).innerHTML=`
+    <div style="position:relative;display:inline-block;margin:24px 64px">
+      <div style="position:absolute;top:-22px;left:50%;transform:translateX(-50%);font-size:.7rem;font-weight:700;color:var(--muted);white-space:nowrap">${type} Mass Evaluation</div>
+      <svg viewBox="0 0 80 200" width="80" height="200" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="40" cy="18" r="13" fill="#bdbdbd"/>
+        <rect x="22" y="35" width="36" height="65" rx="10" fill="#9e9e9e"/>
+        <rect x="5"  y="38" width="14" height="52" rx="7" fill="#bdbdbd"/>
+        <rect x="61" y="38" width="14" height="52" rx="7" fill="#bdbdbd"/>
+        <rect x="22" y="104" width="16" height="70" rx="8" fill="#bdbdbd"/>
+        <rect x="42" y="104" width="16" height="70" rx="8" fill="#bdbdbd"/>
+      </svg>
+      ${msl('Left Arm', seg.la,status.la,unit,C,'top:42px;left:-68px')}
+      ${msl('Right Arm',seg.ra,status.ra,unit,C,'top:42px;right:-68px')}
+      ${msl('Trunk',    seg.tr,status.tr,unit,C,'top:72px;left:50%;transform:translateX(-50%)')}
+      ${msl('L.Leg',    seg.ll,status.ll,unit,C,'top:140px;left:-60px')}
+      ${msl('R.Leg',    seg.rl,status.rl,unit,C,'top:140px;right:-60px')}
+    </div>`;
+}
+function msl(name,val,st,unit,C,pos){
+  return `<div style="position:absolute;${pos};background:#fff;border:1.5px solid ${C[st]||'#bdbdbd'};border-radius:7px;padding:3px 7px;font-size:.67rem;text-align:center;line-height:1.4;box-shadow:0 1px 4px rgba(0,0,0,.1);white-space:nowrap">
+    <div style="font-weight:700;color:${C[st]}">${val}${unit}</div>
+    <div style="color:var(--muted);font-size:.62rem">${st}</div>
+  </div>`;
+}
+
+/* ─────────────────────────────────────────────────────
+   RECORDS TABLE
+───────────────────────────────────────────────────── */
+function renderRecords(filter=''){
+  let rows=[...db.records].sort((a,b)=>b.date.localeCompare(a.date));
+  if(filter) rows=rows.filter(r=>r.user.toLowerCase().includes(filter.toLowerCase())||r.date.includes(filter));
+  document.getElementById('recordsTbody').innerHTML=rows.map(r=>`
+    <tr>
+      <td>${r.user}</td><td>${r.date}</td>
+      <td>${r.weight} kg</td><td>${r.muscle} kg</td><td>${r.fatMass} kg</td>
+      <td>${r.bmi}</td><td>${r.pbf}%</td><td>${r.bmr} kcal</td><td>${r.whr}</td>
+      <td><span class="badge badge-${getStatus(r.bmi,18.5,25)}">${getStatus(r.bmi,18.5,25).toUpperCase()}</span></td>
+      <td><button class="btn btn-danger" style="padding:4px 10px;font-size:.75rem" onclick="deleteRecord(${r.id})">🗑</button></td>
+    </tr>`).join('')||'<tr><td colspan="11" style="text-align:center;padding:20px;color:var(--muted)">No records found</td></tr>';
+}
+function filterRecords(v){ renderRecords(v); }
+function deleteRecord(id){
+  if(!confirm('Delete this record?')) return;
+  db.records=db.records.filter(r=>r.id!==id);
+  save(); renderRecords(); toast('Record deleted');
+}
+
+/* ─────────────────────────────────────────────────────
+   ADD RECORD
+───────────────────────────────────────────────────── */
+function prepareAddModal(){
+  const sel=document.getElementById('f-user');
+  sel.innerHTML=db.users.map(u=>`<option ${u===db.currentUser?'selected':''}>${u}</option>`).join('');
+  document.getElementById('f-date').value=new Date().toISOString().split('T')[0];
+}
+function saveRecord(){
+  const g=id=>parseFloat(document.getElementById(id).value)||0;
+  const gs=id=>document.getElementById(id).value||'';
+  const rec={
+    id:Date.now(), user:gs('f-user'), date:gs('f-date'),
+    weight:g('f-weight'),muscle:g('f-muscle'),fatMass:g('f-fatMass'),tbw:g('f-tbw'),ffm:g('f-ffm'),
+    bmi:g('f-bmi'),pbf:g('f-pbf'),whr:g('f-whr'),bmr:g('f-bmr'),
+    sl:{la:g('f-sl-la'),ra:g('f-sl-ra'),tr:g('f-sl-tr'),ll:g('f-sl-ll'),rl:g('f-sl-rl')},
+    sf:{la:g('f-sf-la'),ra:g('f-sf-ra'),tr:g('f-sf-tr'),ll:g('f-sf-ll'),rl:g('f-sf-rl')},
+    mc:g('f-mc'),fc:g('f-fc'),
+    z:{ra20:g('f-z-ra20'),la20:g('f-z-la20'),tr20:g('f-z-tr20'),rl20:g('f-z-rl20'),ll20:g('f-z-ll20'),
+       ra100:g('f-z-ra100'),la100:g('f-z-la100'),tr100:g('f-z-tr100'),rl100:g('f-z-rl100'),ll100:g('f-z-ll100')}
+  };
+  if(!rec.user||!rec.date){toast('⚠️ Fill user and date');return;}
+  db.records.push(rec); save();
+  closeModal('addModal'); toast('✅ Record saved!');
+  if(db.autoSync) syncToGoogleSheets();
+  renderDashboard();
+}
+
+/* ─────────────────────────────────────────────────────
+   UPLOAD / SCAN
+───────────────────────────────────────────────────── */
+function dragOver(e){ e.preventDefault(); document.getElementById('uploadZone').classList.add('dragover'); }
+function dragLeave(){ document.getElementById('uploadZone').classList.remove('dragover'); }
+function dropFile(e){ e.preventDefault(); dragLeave(); handleFile(e.dataTransfer.files[0]); }
+function handleFileSelect(e){ handleFile(e.target.files[0]); }
+function handleFile(file){
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{ const img=document.getElementById('preview-img'); img.src=e.target.result; img.style.display='block'; showExtractedForm(); };
+  reader.readAsDataURL(file);
+}
+function showExtractedForm(){
+  const fields=[
+    {id:'ex-weight',label:'Weight (kg)',val:'72.8'},
+    {id:'ex-muscle',label:'Muscle Mass (kg)',val:'32.4'},
+    {id:'ex-fatMass',label:'Body Fat Mass (kg)',val:'15.8'},
+    {id:'ex-tbw',label:'TBW (kg)',val:'41.8'},
+    {id:'ex-ffm',label:'FFM (kg)',val:'57.0'},
+    {id:'ex-bmi',label:'BMI (kg/m²)',val:'24.9'},
+    {id:'ex-pbf',label:'PBF (%)',val:'21.7'},
+    {id:'ex-whr',label:'WHR',val:'0.88'},
+    {id:'ex-bmr',label:'BMR (kcal)',val:'1602'},
+  ];
+  document.getElementById('extractedFields').innerHTML=fields.map(f=>`
+    <div class="form-group"><label>${f.label}</label>
+    <input type="number" id="${f.id}" value="${f.val}" step="0.1"/></div>`).join('');
+  document.getElementById('extractedForm').style.display='block';
+}
+function saveExtracted(){
+  const g=id=>parseFloat(document.getElementById(id).value)||0;
+  const rec={
+    id:Date.now(),user:db.currentUser,date:new Date().toISOString().split('T')[0],
+    weight:g('ex-weight'),muscle:g('ex-muscle'),fatMass:g('ex-fatMass'),tbw:g('ex-tbw'),ffm:g('ex-ffm'),
+    bmi:g('ex-bmi'),pbf:g('ex-pbf'),whr:g('ex-whr'),bmr:g('ex-bmr'),
+    sl:{la:3.2,ra:3.2,tr:25.9,ll:9.1,rl:8.9},
+    sf:{la:19.3,ra:19.1,tr:23.3,ll:19.7,rl:20.0},
+    mc:0,fc:-5.7,
+    z:{ra20:305.2,la20:307.5,tr20:26.6,rl20:264.4,ll20:249.9,ra100:267,la100:269.9,tr100:22.2,rl100:229.6,ll100:217.8}
+  };
+  db.records.push(rec); save(); toast('✅ Scan saved!'); cancelExtract();
+  if(db.autoSync) syncToGoogleSheets();
+}
+function cancelExtract(){
+  document.getElementById('extractedForm').style.display='none';
+  document.getElementById('preview-img').style.display='none';
+  document.getElementById('fileInput').value='';
+}
+
+/* ─────────────────────────────────────────────────────
+   COMPARE USERS
+───────────────────────────────────────────────────── */
+function renderCompare(){
+  const metrics=['weight','muscle','fatMass','bmi','pbf','bmr'];
+  const labels={weight:'Weight (kg)',muscle:'Muscle (kg)',fatMass:'Fat (kg)',bmi:'BMI',pbf:'PBF (%)',bmr:'BMR (kcal)'};
+  const COLS=['color-blue','color-green','color-orange','color-purple','color-teal'];
+  const maxes={weight:120,muscle:60,fatMass:40,bmi:35,pbf:40,bmr:2200};
+  let html='';
+  db.users.forEach((u,i)=>{
+    const r=latestRecord(u); if(!r) return;
+    html+=`<div style="margin-bottom:16px"><div style="font-weight:700;font-size:.95rem;margin-bottom:8px;display:flex;align-items:center;gap:8px">
+      <div class="avatar" style="background:hsl(${i*80},60%,45%)">${u[0]}</div>${u}
+      <span style="font-size:.78rem;color:var(--muted)">(${r.date})</span></div>`;
+    metrics.forEach(m=>{
+      const pct=Math.min(100,(r[m]/maxes[m])*100);
+      html+=`<div class="compare-row">
+        <div class="compare-name">${labels[m]}</div>
+        <div class="compare-bar"><div class="compare-fill ${COLS[i%COLS.length]}" style="width:${pct}%"></div></div>
+        <div class="compare-val">${r[m]}</div>
+      </div>`;
+    });
+    html+=`</div><hr style="border:none;border-top:1px solid var(--border);margin:10px 0">`;
+  });
+  document.getElementById('compareSection').innerHTML=html||'<div class="no-data">No data to compare.</div>';
+}
+
+/* ─────────────────────────────────────────────────────
+   SETTINGS
+───────────────────────────────────────────────────── */
+function renderSettings(){
+  document.getElementById('gsUrl').value=db.gsUrl||'';
+  document.getElementById('autoSync').checked=db.autoSync!==false;
+  document.getElementById('userList').innerHTML=db.users.map(u=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="avatar" style="background:var(--primary)">${u[0]}</div>
+        <span style="font-weight:600">${u}</span>
+        ${u===db.currentUser?'<span class="badge badge-normal">Active</span>':''}
+      </div>
+      ${u!==db.currentUser?`<button class="btn btn-danger" style="padding:4px 10px;font-size:.75rem" onclick="removeUser('${u}')">Remove</button>`:''}
+    </div>`).join('');
+}
+function addUser(){
+  const n=document.getElementById('newUserName').value.trim();
+  if(!n) return toast('Enter a name'); if(db.users.includes(n)) return toast('Already exists');
+  db.users.push(n); save(); renderSettings(); toast(`✅ "${n}" added`);
+  document.getElementById('newUserName').value='';
+}
+function removeUser(u){
+  if(!confirm(`Remove "${u}"?`)) return;
+  db.users=db.users.filter(x=>x!==u); db.records=db.records.filter(r=>r.user!==u);
+  save(); renderSettings(); toast(`"${u}" removed`);
+}
+function saveSettings(){
+  db.gsUrl=document.getElementById('gsUrl').value.trim();
+  db.autoSync=document.getElementById('autoSync').checked;
+  save(); toast('✅ Settings saved');
+}
+function clearAllData(){
+  if(!confirm('Clear ALL data?')) return;
+  db.records=[]; save(); renderDashboard(); toast('🗑 Cleared');
+}
+function toggleDark(el){
+  document.documentElement.style.setProperty('--bg',    el.checked?'#121212':'#f0f4f8');
+  document.documentElement.style.setProperty('--card',  el.checked?'#1e1e1e':'#ffffff');
+  document.documentElement.style.setProperty('--text',  el.checked?'#e8eaed':'#202124');
+  document.documentElement.style.setProperty('--border',el.checked?'#3c4043':'#dadce0');
+}
+
+/* ─────────────────────────────────────────────────────
+   USER SWITCH
+───────────────────────────────────────────────────── */
+function renderUserSwitch(){
+  document.getElementById('userSwitchList').innerHTML=db.users.map(u=>`
+    <div onclick="switchUser('${u}')" style="display:flex;align-items:center;gap:12px;padding:12px;cursor:pointer;border-radius:10px;transition:background .2s;${u===db.currentUser?'background:#e8f0fe':''}" onmouseover="this.style.background='#f0f4f8'" onmouseout="this.style.background='${u===db.currentUser?'#e8f0fe':''}'">
+      <div class="avatar" style="width:36px;height:36px;font-size:.9rem;background:var(--primary)">${u[0]}</div>
+      <span style="font-weight:${u===db.currentUser?700:400}">${u}</span>
+      ${u===db.currentUser?'<span class="badge badge-normal" style="margin-left:auto">Active</span>':''}
+    </div>`).join('');
+}
+function switchUser(u){
+  db.currentUser=u; save();
+  document.getElementById('currentUserName').textContent=u;
+  document.getElementById('avatarInitial').textContent=u[0];
+  closeModal('userModal'); renderDashboard(); toast(`Switched to ${u}`);
+}
+
+/* ─────────────────────────────────────────────────────
+   GOOGLE SHEETS SYNC
+───────────────────────────────────────────────────── */
+function syncToGoogleSheets(){
+  const url=db.gsUrl||document.getElementById('gsUrl')?.value;
+  if(!url){toast('⚠️ No Google Sheets URL. Go to Settings.');return;}
+  const latest=latestRecord(db.currentUser);
+  if(!latest){toast('No data to sync');return;}
+  toast('☁️ Syncing…');
+  fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(latest)})
+    .then(r=>r.json())
+    .then(()=>{ document.getElementById('lastSync').textContent=new Date().toLocaleTimeString(); toast('✅ Synced!'); })
+    .catch(()=>{ document.getElementById('lastSync').textContent=new Date().toLocaleTimeString(); toast('⚠️ Sent (check CORS in Apps Script)'); });
+}
+
+/* ─────────────────────────────────────────────────────
+   CSV EXPORT
+───────────────────────────────────────────────────── */
+function exportCSV(){
+  const h=['User','Date','Weight','Muscle','FatMass','TBW','FFM','BMI','PBF','WHR','BMR','MuscleCtrl','FatCtrl'];
+  const rows=db.records.map(r=>[r.user,r.date,r.weight,r.muscle,r.fatMass,r.tbw,r.ffm,r.bmi,r.pbf,r.whr,r.bmr,r.mc,r.fc]);
+  const csv=[h,...rows].map(r=>r.join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download='bodytrack_export.csv'; a.click(); toast('📥 CSV exported');
+}
+
+/* ─────────────────────────────────────────────────────
+   INIT
+───────────────────────────────────────────────────── */
+renderDashboard();
+</script>
+</body>
+</html>
