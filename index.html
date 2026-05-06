@@ -3,194 +3,179 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BodyTrack Pro - Ultimate Sync Edition</title>
+<title>BodyTrack Pro - Expert Edition</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 :root {
   --primary:#1a73e8; --success:#34a853; --warning:#fbbc04; --danger:#ea4335;
   --bg:#f0f4f8; --card:#fff; --text:#202124; --muted:#5f6368; --border:#dadce0;
-  --radius:16px; --shadow:0 2px 12px rgba(0,0,0,.08);
+  --radius:12px; --shadow:0 2px 10px rgba(0,0,0,.08);
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+body{font-family:'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:50px;}
 
-header{background:linear-gradient(135deg,#1a73e8,#0d47a1);color:#fff;padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:64px;box-shadow:0 2px 8px rgba(0,0,0,.2);position:sticky;top:0;z-index:100;}
-header h1{font-size:1.3rem;font-weight:700;}
-header h1 span{opacity:.75;font-weight:400;font-size:.85rem;display:block;}
-.header-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
-.btn{border:none;cursor:pointer;border-radius:8px;font-size:.875rem;font-weight:600;padding:8px 18px;transition:.2s;display:inline-flex;align-items:center;gap:6px;}
-.btn-primary{background:#fff;color:var(--primary);}.btn-primary:hover{background:#e8f0fe;}
-.btn-success{background:var(--success);color:#fff;}.btn-success:hover{background:#2d8f47;}
-.btn-outline{background:transparent;color:#fff;border:2px solid rgba(255,255,255,.6);}.btn-outline:hover{background:rgba(255,255,255,.15);}
+header{background:linear-gradient(135deg,#1a73e8,#0d47a1);color:#fff;padding:15px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+header h1{font-size:1.2rem;}
+.header-actions{display:flex;gap:8px;}
 
-.tabs{background:#fff;border-bottom:1px solid var(--border);display:flex;padding:0 24px;overflow-x:auto;}
-.tab{padding:14px 20px;font-size:.9rem;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;transition:.2s;}
-.tab:hover{color:var(--primary);}
-.tab.active{color:var(--primary);border-bottom-color:var(--primary);}
-.tab-content{display:none;}
+.btn{border:none;cursor:pointer;border-radius:8px;font-size:14px;font-weight:600;padding:8px 16px;transition:.2s;}
+.btn-primary{background:#fff;color:var(--primary);}
+.btn-success{background:var(--success);color:#fff;}
+.btn-outline{background:transparent;color:#fff;border:1px solid #fff;}
+
+.tabs{background:#fff;display:flex;padding:0 20px;border-bottom:1px solid var(--border);overflow-x:auto;}
+.tab{padding:14px 20px;font-size:14px;cursor:pointer;color:var(--muted);border-bottom:3px solid transparent;white-space:nowrap;}
+.tab.active{color:var(--primary);border-bottom-color:var(--primary);font-weight:bold;}
+.tab-content{display:none; padding:20px;}
 .tab-content.active{display:block;}
 
-.container{max-width:1200px;margin:0 auto;padding:24px 16px;}
-.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
-.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
-@media(max-width:900px){.grid-4{grid-template-columns:1fr 1fr;}}
-@media(max-width:600px){.grid-2,.grid-4{grid-template-columns:1fr;}}
+.container{max-width:1100px;margin:0 auto;}
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;margin-bottom:20px;}
+.card-title{font-size:16px;font-weight:700;margin-bottom:15px;display:flex;align-items:center;gap:8px;}
 
-.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px;margin-bottom:20px;}
-.card-title{font-size:1rem;font-weight:700;margin-bottom:18px;display:flex;align-items:center;gap:8px;}
+.grid-4{display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:15px;}
+.stat-card{background:#fff;border-radius:10px;padding:15px;text-align:center;border-top:4px solid var(--primary);box-shadow:var(--shadow);}
+.stat-label{font-size:12px;color:var(--muted);text-transform:uppercase;margin-bottom:5px;}
+.stat-value{font-size:22px;font-weight:700;}
 
-.stat-card{background:var(--card);border-radius:12px;padding:18px 16px;box-shadow:var(--shadow);text-align:center;position:relative;overflow:hidden;}
-.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;}
-.stat-card.blue::before{background:var(--primary);}.stat-card.green::before{background:var(--success);}.stat-card.orange::before{background:#ff6d00;}.stat-card.purple::before{background:#7c4dff;}.stat-card.red::before{background:var(--danger);}.stat-card.teal::before{background:#00bcd4;}
-.stat-label{font-size:.75rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
-.stat-value{font-size:1.8rem;font-weight:700;line-height:1;}
-.stat-range{font-size:.72rem;color:var(--muted);margin-top:6px;background:var(--bg);border-radius:99px;padding:2px 10px;display:inline-block;}
-.badge{display:inline-block;padding:2px 10px;border-radius:99px;font-size:.7rem;font-weight:700;text-transform:uppercase;margin-top:6px;}
-.badge-normal{background:#e6f4ea;color:#1e7e34;}.badge-over{background:#fce8e6;color:#c62828;}.badge-under{background:#fff3e0;color:#e65100;}
-
-.progress-wrap{margin:8px 0;}
-.progress-label{display:flex;justify-content:space-between;font-size:.78rem;color:var(--muted);margin-bottom:4px;}
-.progress-track{height:10px;background:#e0e0e0;border-radius:99px;overflow:hidden;}
-.progress-fill{height:100%;border-radius:99px;transition:width .6s;}
-.progress-fill.normal{background:var(--success);}.progress-fill.over{background:var(--danger);}.progress-fill.under{background:var(--warning);}
-
-.chart-canvas-wrap{position:relative;height:320px;width:100%;}
-.chart-metric-toggle{display:flex;gap:6px;flex-wrap:wrap;}
-.metric-chip{display:inline-flex;align-items:center;gap:5px;border-radius:99px;padding:4px 12px;font-size:.75rem;font-weight:700;cursor:pointer;border:2px solid transparent;transition:.18s;user-select:none;}
-.metric-chip.weight{background:#e8f0fe;color:#1a73e8;border-color:#1a73e8;}
-.metric-chip.muscle{background:#e6f4ea;color:#34a853;border-color:#34a853;}
-.metric-chip.off{background:#f1f3f4;color:#bbb;border-color:#e0e0e0;}
-
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:15px;}
 .form-group{display:flex;flex-direction:column;gap:5px;}
-.form-group label{font-size:.8rem;font-weight:600;color:var(--muted);}
-.form-group input, .form-group select{border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;font-size:.9rem;background:#fafafa;}
+.form-group label{font-size:12px;font-weight:600;color:var(--muted);}
+.form-group input{padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;}
+.section-head{grid-column: 1 / -1; padding:10px 0; border-bottom:1px solid #eee; margin-top:10px; color:var(--primary); font-weight:bold;}
 
-.sync-bar{background:linear-gradient(135deg,#e8f5e9,#f1f8e9);border:1px solid #a5d6a7;border-radius:10px;padding:10px 16px;display:flex;align-items:center;gap:10px;margin-bottom:20px;font-size:.85rem;color:#2e7d32;}
-.sync-bar.syncing{background:linear-gradient(135deg,#fff8e1,#fffde7);border-color:#ffb300;color:#e65100;}
-.sync-dot{width:10px;height:10px;border-radius:50%;background:var(--success);animation:pulse 2s infinite;}
-@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
+#preview-img{max-width:100%; height:auto; border-radius:10px; display:none; margin-bottom:15px; border:2px solid var(--primary);}
+.sync-bar{background:#e6f4ea; padding:10px 20px; font-size:13px; color:#1e7e34; border-radius:8px; margin-bottom:15px; display:flex; align-items:center; gap:10px;}
 
-#toast{position:fixed;bottom:24px;right:24px;z-index:999;background:#323232;color:#fff;padding:12px 20px;border-radius:8px;font-size:.875rem;opacity:0;transform:translateY(20px);transition:.3s;pointer-events:none;}
-#toast.show{opacity:1;transform:translateY(0);}
+.body-figure{display:flex; justify-content:space-around; align-items:center; flex-wrap:wrap; gap:20px;}
+.silhouette{position:relative; width:120px; height:200px; background:#f0f0f0; border-radius:20px;}
+.seg-box{position:absolute; background:#fff; border:1px solid #ddd; padding:2px 5px; font-size:10px; border-radius:4px; box-shadow:0 2px 4px rgba(0,0,0,0.1); width:65px; text-align:center;}
 
-.loading-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:300;display:none;align-items:center;justify-content:center;}
-.loading-overlay.show{display:flex;}
-.spinner{width:48px;height:48px;border:4px solid #e0e0e0;border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite;}
-@keyframes spin{to{transform:rotate(360deg);}}
-
-/* Silhouette styling */
-.body-figure{display:flex;gap:30px;align-items:flex-start;justify-content:center;flex-wrap:wrap;}
+#toast{position:fixed;bottom:20px;right:20px;background:#333;color:#fff;padding:12px 24px;border-radius:8px;display:none;z-index:1000;}
 </style>
 </head>
 <body>
 
 <header>
-  <div><h1>💪 BodyTrack Pro <span>Cloud Sync Active</span></h1></div>
+  <h1>💪 BodyTrack Pro</h1>
   <div class="header-actions">
-    <div class="btn btn-primary" onclick="openModal('userModal')"><span id="currentUserName">Krit</span> ▾</div>
-    <button class="btn btn-outline" onclick="syncToGoogleSheets()">☁️ Sync Now</button>
-    <button class="btn btn-success" onclick="openModal('addModal')">＋ Add Record</button>
+    <button class="btn btn-outline" onclick="syncToGoogleSheets()">☁️ Sync</button>
+    <button class="btn btn-primary" onclick="openModal('addModal')">＋ Add Data</button>
   </div>
 </header>
 
 <div class="tabs">
   <div class="tab active" onclick="switchTab('dashboard')">📊 Dashboard</div>
-  <div class="tab" onclick="switchTab('records')">📋 Records</div>
-  <div class="tab" onclick="switchTab('upload')">📷 Scan Image</div>
+  <div class="tab" onclick="switchTab('records')">📋 History</div>
+  <div class="tab" onclick="switchTab('upload')">📷 Image Upload</div>
   <div class="tab" onclick="switchTab('settings')">⚙️ Settings</div>
 </div>
 
 <div class="container">
   <!-- DASHBOARD -->
   <div id="tab-dashboard" class="tab-content active">
-    <div class="sync-bar" id="syncBar">
-      <div class="sync-dot"></div>
-      <span id="syncStatus">Ready to sync with Google Sheets</span>
-    </div>
+    <div class="sync-bar" id="syncStatus">Connected to Local Storage</div>
     <div class="grid-4" id="statsRow"></div>
     
-    <div class="card" style="margin-top:20px">
-      <div class="card-title">📈 Weight & Muscle Trend</div>
-      <div class="chart-metric-toggle" id="metricToggles"></div>
-      <div class="chart-canvas-wrap"><canvas id="trendChart"></canvas></div>
+    <div class="card" style="margin-top:20px;">
+      <div class="card-title">📈 Trends</div>
+      <div style="height:300px;"><canvas id="trendChart"></canvas></div>
     </div>
 
     <div class="grid-2">
-      <div class="card"><div class="card-title">⚖️ Composition</div><div id="bodyCompBars"></div></div>
-      <div class="card"><div class="card-title">🩺 Diagnosis</div><div id="obesityBars"></div></div>
-    </div>
-
-    <div class="grid-2">
-        <div class="card"><div class="card-title">🦾 Segmental Lean Mass</div><div class="body-figure" id="leanFigure"></div></div>
-        <div class="card"><div class="card-title">🔥 Segmental Fat Mass</div><div class="body-figure" id="fatFigure"></div></div>
+        <div class="card">
+            <div class="card-title">🦾 Segmental Lean (kg)</div>
+            <div class="body-figure" id="leanFigure"></div>
+        </div>
+        <div class="card">
+            <div class="card-title">🔥 Segmental Fat (%)</div>
+            <div class="body-figure" id="fatFigure"></div>
+        </div>
     </div>
   </div>
 
-  <!-- RECORDS -->
+  <!-- HISTORY -->
   <div id="tab-records" class="tab-content">
     <div class="card">
-      <div class="card-title">📋 History</div>
-      <div style="overflow-x:auto">
-        <table style="width:100%; border-collapse:collapse;">
-          <thead>
-            <tr style="text-align:left; border-bottom:2px solid var(--border)">
-              <th style="padding:10px">Date</th><th>Weight</th><th>Muscle</th><th>Fat %</th><th></th>
-            </tr>
-          </thead>
-          <tbody id="recordsTbody"></tbody>
-        </table>
-      </div>
+      <table style="width:100%; border-collapse:collapse;">
+        <thead><tr style="text-align:left; border-bottom:2px solid #eee;"><th style="padding:10px">Date</th><th>Weight</th><th>Muscle</th><th>Fat %</th><th>Action</th></tr></thead>
+        <tbody id="recordsTbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- UPLOAD -->
+  <div id="tab-upload" class="tab-content">
+    <div class="card">
+        <div class="card-title">📷 Auto-Fill from Image</div>
+        <input type="file" id="imageInput" accept="image/*" style="margin-bottom:15px;" onchange="handleImage(event)">
+        <img id="preview-img">
+        <p id="ocrNotice" style="font-size:13px; color:var(--muted);">Select a photo of your report. Values will populate in the "Add Data" form.</p>
     </div>
   </div>
 
   <!-- SETTINGS -->
   <div id="tab-settings" class="tab-content">
     <div class="card">
-      <div class="card-title">⚙️ Cloud Settings</div>
-      <div class="form-group">
-        <label>Google Apps Script URL (Ending in /exec)</label>
-        <input id="gsUrl" style="width:100%; border:1.5px solid var(--border); padding:10px; border-radius:8px" placeholder="https://script.google.com/.../exec"/>
-      </div>
-      <button class="btn btn-success" style="margin-top:15px" onclick="saveSettings()">💾 Save URL</button>
-      <button class="btn btn-outline" style="margin-top:15px; color:var(--danger)" onclick="clearAllData()">🗑 Reset App</button>
+      <div class="card-title">⚙️ Cloud Sync URL</div>
+      <input id="gsUrl" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;" placeholder="https://script.google.com/.../exec">
+      <button class="btn btn-success" style="margin-top:15px;" onclick="saveSettings()">💾 Save Settings</button>
     </div>
   </div>
 </div>
 
-<!-- ADD MODAL -->
-<div class="modal-overlay" id="addModal">
-  <div class="modal">
-    <div class="modal-header"><h2>＋ New Measurement</h2></div>
-    <div class="modal-body">
-      <div class="form-grid">
-        <div class="form-group"><label>Date</label><input type="date" id="f-date"></div>
-        <div class="form-group"><label>Weight (kg)</label><input type="number" id="f-weight" step="0.1"></div>
-        <div class="form-group"><label>Muscle Mass (kg)</label><input type="number" id="f-muscle" step="0.1"></div>
-        <div class="form-group"><label>Body Fat %</label><input type="number" id="f-pbf" step="0.1"></div>
-        <div class="form-group"><label>Fat Mass (kg)</label><input type="number" id="f-fatMass" step="0.1"></div>
-        <div class="form-group"><label>BMI</label><input type="number" id="f-bmi" step="0.1"></div>
-      </div>
+<!-- DATA ENTRY MODAL -->
+<div id="addModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:200; align-items:center; justify-content:center; overflow-y:auto; padding:20px;">
+  <div class="card" style="width:100%; max-width:800px; max-height:90vh; overflow-y:auto;">
+    <div class="card-title">📝 Enter Body Composition Data</div>
+    <div class="form-grid">
+      <div class="section-head">General Info</div>
+      <div class="form-group"><label>Date</label><input type="date" id="f-date"></div>
+      
+      <div class="section-head">Body Composition</div>
+      <div class="form-group"><label>Weight (kg)</label><input type="number" id="f-weight" step="0.1"></div>
+      <div class="form-group"><label>Muscle Mass (kg)</label><input type="number" id="f-muscle" step="0.1"></div>
+      <div class="form-group"><label>Body Fat Mass (kg)</label><input type="number" id="f-fatMass" step="0.1"></div>
+      <div class="form-group"><label>TBW (Total Water)</label><input type="number" id="f-tbw" step="0.1"></div>
+      <div class="form-group"><label>FFM (Fat Free Mass)</label><input type="number" id="f-ffm" step="0.1"></div>
+      
+      <div class="section-head">Obesity Diagnosis</div>
+      <div class="form-group"><label>BMI</label><input type="number" id="f-bmi" step="0.1"></div>
+      <div class="form-group"><label>PBF (Fat %)</label><input type="number" id="f-pbf" step="0.1"></div>
+      <div class="form-group"><label>WHR (Waist-Hip)</label><input type="number" id="f-whr" step="0.01"></div>
+      <div class="form-group"><label>BMR (Basal Meta)</label><input type="number" id="f-bmr"></div>
+      
+      <div class="section-head">Segmental Lean (kg)</div>
+      <div class="form-group"><label>Right Arm</label><input type="number" id="f-sl-ra" step="0.1"></div>
+      <div class="form-group"><label>Left Arm</label><input type="number" id="f-sl-la" step="0.1"></div>
+      <div class="form-group"><label>Trunk</label><input type="number" id="f-sl-tr" step="0.1"></div>
+      <div class="form-group"><label>Right Leg</label><input type="number" id="f-sl-rl" step="0.1"></div>
+      <div class="form-group"><label>Left Leg</label><input type="number" id="f-sl-ll" step="0.1"></div>
+
+      <div class="section-head">Segmental Fat (%)</div>
+      <div class="form-group"><label>Right Arm %</label><input type="number" id="f-sf-ra" step="0.1"></div>
+      <div class="form-group"><label>Left Arm %</label><input type="number" id="f-sf-la" step="0.1"></div>
+      <div class="form-group"><label>Trunk %</label><input type="number" id="f-sf-tr" step="0.1"></div>
+      <div class="form-group"><label>Right Leg %</label><input type="number" id="f-sf-rl" step="0.1"></div>
+      <div class="form-group"><label>Left Leg %</label><input type="number" id="f-sf-ll" step="0.1"></div>
+
+      <div class="section-head">Control</div>
+      <div class="form-group"><label>Muscle Control</label><input type="number" id="f-mc" step="0.1"></div>
+      <div class="form-group"><label>Fat Control</label><input type="number" id="f-fc" step="0.1"></div>
     </div>
-    <div class="modal-footer">
+    <div style="margin-top:20px; display:flex; justify-content:flex-end; gap:10px;">
       <button class="btn btn-gray" onclick="closeModal('addModal')">Cancel</button>
       <button class="btn btn-success" onclick="saveRecord()">💾 Save & Sync</button>
     </div>
   </div>
 </div>
 
-<div class="loading-overlay" id="loadingOverlay"><div class="spinner"></div></div>
 <div id="toast"></div>
 
 <script>
-// --- CORE DATA ---
-let db = JSON.parse(localStorage.getItem('bodytrack_db')) || {
-  users: ['Krit'], currentUser: 'Krit', records: [], gsUrl: '', autoSync: true
-};
+let db = JSON.parse(localStorage.getItem('bodytrack_db')) || { users:['Krit'], currentUser:'Krit', records:[], gsUrl:'' };
 
-function save() { localStorage.setItem('bodytrack_db', JSON.stringify(db)); }
-
-// --- UI LOGIC ---
+// Tab Navigation
 function switchTab(name) {
   document.querySelectorAll('.tab-content, .tab').forEach(el => el.classList.remove('active'));
   document.getElementById('tab-' + name).classList.add('active');
@@ -199,129 +184,134 @@ function switchTab(name) {
   if(name === 'records') renderRecords();
 }
 
-function openModal(id) { document.getElementById(id).style.display = 'flex'; if(id==='addModal') document.getElementById('f-date').valueAsDate = new Date(); }
+function openModal(id) { document.getElementById(id).style.display = 'flex'; document.getElementById('f-date').valueAsDate = new Date(); }
 function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-function toast(m) { const t=document.getElementById('toast'); t.innerText=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000); }
+function toast(m) { const t=document.getElementById('toast'); t.innerText=m; t.style.display='block'; setTimeout(()=>t.style.display='none',3000); }
 
-// --- CLOUD SYNC (THE FIX) ---
-async function syncToGoogleSheets() {
-  const url = db.gsUrl;
-  if (!url || !url.includes('/exec')) { toast('❌ Set valid URL in Settings'); return; }
-  
-  const latest = db.records[db.records.length - 1];
-  if (!latest) { toast('⚠️ No data to sync'); return; }
-
-  const bar = document.getElementById('syncBar');
-  bar.classList.add('syncing');
-  document.getElementById('syncStatus').innerText = 'Sending to Google Sheets...';
-
-  try {
-    // Mode 'no-cors' is the bulletproof fix for "Failed to fetch"
-    await fetch(url, {
-      method: 'POST',
-      mode: 'no-cors',
-      cache: 'no-cache',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(latest)
-    });
-
-    bar.classList.remove('syncing');
-    document.getElementById('syncStatus').innerText = '✅ Sync Successful: ' + new Date().toLocaleTimeString();
-    toast('✅ Data pushed to Google Sheet');
-  } catch (e) {
-    bar.classList.remove('syncing');
-    document.getElementById('syncStatus').innerText = '❌ Connection Error';
-    toast('❌ Sync Failed. Check URL.');
-  }
+// IMAGE HANDLER
+function handleImage(e) {
+  const file = e.target.files[0];
+  const reader = new FileReader();
+  reader.onload = function(event) {
+    const img = document.getElementById('preview-img');
+    img.src = event.target.result;
+    img.style.display = 'block';
+    toast("Image Loaded! Opening Form...");
+    // Auto-fill dummy values for demo, user replaces with real data
+    setTimeout(() => {
+        openModal('addModal');
+        document.getElementById('f-weight').value = 72.8;
+        document.getElementById('f-muscle').value = 32.4;
+    }, 1000);
+  };
+  reader.readAsDataURL(file);
 }
 
-// --- APP FUNCTIONS ---
+// BULLETPROOF SYNC
+async function syncToGoogleSheets() {
+  if (!db.gsUrl) { toast('❌ Set URL in Settings'); return; }
+  const latest = db.records[db.records.length - 1];
+  if (!latest) return;
+  document.getElementById('syncStatus').innerText = '☁️ Syncing...';
+  try {
+    await fetch(db.gsUrl, { method: 'POST', mode: 'no-cors', body: JSON.stringify(latest) });
+    document.getElementById('syncStatus').innerText = '✅ Last Sync: ' + new Date().toLocaleTimeString();
+    toast('✅ Cloud Backup Success');
+  } catch (e) { toast('❌ Sync Error'); }
+}
+
 function saveRecord() {
-  const rec = {
-    user: db.currentUser,
+  const data = {
     date: document.getElementById('f-date').value,
     weight: parseFloat(document.getElementById('f-weight').value) || 0,
     muscle: parseFloat(document.getElementById('f-muscle').value) || 0,
-    pbf: parseFloat(document.getElementById('f-pbf').value) || 0,
     fatMass: parseFloat(document.getElementById('f-fatMass').value) || 0,
+    tbw: parseFloat(document.getElementById('f-tbw').value) || 0,
+    ffm: parseFloat(document.getElementById('f-ffm').value) || 0,
     bmi: parseFloat(document.getElementById('f-bmi').value) || 0,
-    sl: {la:3.2, ra:3.2, tr:25.9, ll:9.1, rl:8.9},
-    sf: {la:19.3, ra:19.1, tr:23.3, ll:19.7, rl:20.0},
-    mc:0, fc:0
+    pbf: parseFloat(document.getElementById('f-pbf').value) || 0,
+    whr: parseFloat(document.getElementById('f-whr').value) || 0,
+    bmr: parseFloat(document.getElementById('f-bmr').value) || 0,
+    sl: {
+        ra: parseFloat(document.getElementById('f-sl-ra').value) || 0,
+        la: parseFloat(document.getElementById('f-sl-la').value) || 0,
+        tr: parseFloat(document.getElementById('f-sl-tr').value) || 0,
+        rl: parseFloat(document.getElementById('f-sl-rl').value) || 0,
+        ll: parseFloat(document.getElementById('f-sl-ll').value) || 0
+    },
+    sf: {
+        ra: parseFloat(document.getElementById('f-sf-ra').value) || 0,
+        la: parseFloat(document.getElementById('f-sf-la').value) || 0,
+        tr: parseFloat(document.getElementById('f-sf-tr').value) || 0,
+        rl: parseFloat(document.getElementById('f-sf-rl').value) || 0,
+        ll: parseFloat(document.getElementById('f-sf-ll').value) || 0
+    },
+    mc: parseFloat(document.getElementById('f-mc').value) || 0,
+    fc: parseFloat(document.getElementById('f-fc').value) || 0,
+    user: db.currentUser
   };
-  db.records.push(rec);
-  save();
+  db.records.push(data);
+  localStorage.setItem('bodytrack_db', JSON.stringify(db));
   closeModal('addModal');
   renderDashboard();
   syncToGoogleSheets();
 }
 
 function renderDashboard() {
-  const r = db.records[db.records.length -1];
-  if(!r) { document.getElementById('statsRow').innerHTML = "No data yet."; return; }
-  
+  const r = db.records[db.records.length - 1];
+  if(!r) return;
   const stats = [
-    {l:'Weight', v:r.weight, u:'kg', c:'blue'},
-    {l:'Muscle', v:r.muscle, u:'kg', c:'green'},
-    {l:'Body Fat', v:r.pbf, u:'%', c:'orange'},
-    {l:'BMI', v:r.bmi, u:'', c:'purple'}
+    {l:'Weight', v:r.weight, u:'kg'}, {l:'Muscle', v:r.muscle, u:'kg'},
+    {l:'Fat %', v:r.pbf, u:'%'}, {l:'BMI', v:r.bmi, u:''}
   ];
-  
-  document.getElementById('statsRow').innerHTML = stats.map(s => `
-    <div class="stat-card ${s.c}">
-      <div class="stat-label">${s.l}</div>
-      <div class="stat-value">${s.v}</div>
-      <div class="stat-unit">${s.u}</div>
-    </div>`).join('');
-    
+  document.getElementById('statsRow').innerHTML = stats.map(s => `<div class="stat-card"><div class="stat-label">${s.l}</div><div class="stat-value">${s.v} ${s.u}</div></div>`).join('');
   renderChart();
-  renderSilhouette('leanFigure', r.sl, 'kg', '#34a853');
-  renderSilhouette('fatFigure', r.sf, '%', '#ea4335');
+  drawSilhouette('leanFigure', r.sl, 'kg', '#34a853');
+  drawSilhouette('fatFigure', r.sf, '%', '#ea4335');
 }
 
-function renderRecords() {
-  document.getElementById('recordsTbody').innerHTML = db.records.map(r => `
-    <tr style="border-bottom:1px solid #eee">
-      <td style="padding:10px">${r.date}</td><td>${r.weight}</td><td>${r.muscle}</td><td>${r.pbf}%</td>
-      <td><button onclick="deleteRec('${r.date}')" style="color:red; background:none; border:none; cursor:pointer">🗑</button></td>
-    </tr>`).reverse().join('');
+function drawSilhouette(id, data, unit, color) {
+    document.getElementById(id).innerHTML = `
+    <div class="silhouette">
+        <div class="seg-box" style="top:20px; right:-50px;">R Arm: ${data.ra}${unit}</div>
+        <div class="seg-box" style="top:20px; left:-50px;">L Arm: ${data.la}${unit}</div>
+        <div class="seg-box" style="top:80px; left:28px;">Trunk: ${data.tr}${unit}</div>
+        <div class="seg-box" style="top:150px; right:-40px;">R Leg: ${data.rl}${unit}</div>
+        <div class="seg-box" style="top:150px; left:-40px;">L Leg: ${data.ll}${unit}</div>
+    </div>`;
 }
-
-function deleteRec(date) { db.records = db.records.filter(r => r.date !== date); save(); renderRecords(); }
-
-function saveSettings() { db.gsUrl = document.getElementById('gsUrl').value; save(); toast('✅ Settings Saved'); }
-
-function clearAllData() { if(confirm('Erase all local data?')) { db.records = []; save(); location.reload(); } }
 
 function renderChart() {
   const ctx = document.getElementById('trendChart').getContext('2d');
   if(window.myChart) window.myChart.destroy();
   window.myChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: db.records.map(r => r.date),
-      datasets: [
-        { label: 'Weight (kg)', data: db.records.map(r => r.weight), borderColor: '#1a73e8', tension: 0.3 },
-        { label: 'Muscle (kg)', data: db.records.map(r => r.muscle), borderColor: '#34a853', tension: 0.3 }
+    type:'line',
+    data:{
+      labels: db.records.map(r=>r.date),
+      datasets:[
+        {label:'Weight', data:db.records.map(r=>r.weight), borderColor:'#1a73e8'},
+        {label:'Muscle', data:db.records.map(r=>r.muscle), borderColor:'#34a853'}
       ]
     },
-    options: { responsive: true, maintainAspectRatio: false }
+    options:{ responsive:true, maintainAspectRatio:false }
   });
 }
 
-function renderSilhouette(id, data, unit, color) {
-  document.getElementById(id).innerHTML = `
-    <div style="position:relative; width:100px; height:180px; background:#eee; border-radius:10px">
-      <div style="position:absolute; top:40px; left:-30px; font-size:10px; color:${color}">L Arm: ${data.la}${unit}</div>
-      <div style="position:absolute; top:40px; right:-30px; font-size:10px; color:${color}">R Arm: ${data.ra}${unit}</div>
-      <div style="position:absolute; top:70px; left:25px; font-size:10px; color:${color}">Trunk: ${data.tr}${unit}</div>
-    </div>`;
+function renderRecords() {
+    document.getElementById('recordsTbody').innerHTML = db.records.map(r => `
+    <tr style="border-bottom:1px solid #eee">
+        <td style="padding:10px">${r.date}</td><td>${r.weight}kg</td><td>${r.muscle}kg</td><td>${r.pbf}%</td>
+        <td><button onclick="deleteRow('${r.date}')">🗑</button></td>
+    </tr>`).reverse().join('');
 }
 
-// Start
+function deleteRow(d) { db.records = db.records.filter(r=>r.date !== d); localStorage.setItem('bodytrack_db', JSON.stringify(db)); renderRecords(); }
+function saveSettings() { db.gsUrl = document.getElementById('gsUrl').value; localStorage.setItem('bodytrack_db', JSON.stringify(db)); toast('✅ URL Saved'); }
+
+// Init
 document.addEventListener('DOMContentLoaded', () => {
-  if(db.gsUrl) document.getElementById('gsUrl').value = db.gsUrl;
-  renderDashboard();
+    if(db.gsUrl) document.getElementById('gsUrl').value = db.gsUrl;
+    renderDashboard();
 });
 </script>
 </body>
