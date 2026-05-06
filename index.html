@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BodyTrack Pro - Cloud Sync Edition</title>
+<title>BodyTrack Pro - Body Composition Tracker</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 :root {
@@ -132,18 +132,18 @@ tbody td:first-child{font-weight:600;}
 .user-chip:hover{background:rgba(255,255,255,.3);}
 .avatar{width:26px;height:26px;border-radius:50%;background:var(--warning);display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:800;color:#fff;}
 
-.settings-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);}
+.settings-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);gap:12px;}
 .settings-row:last-child{border-bottom:none;}
 .settings-label{font-size:.9rem;font-weight:600;}
 .settings-sub{font-size:.78rem;color:var(--muted);margin-top:2px;}
-.toggle{position:relative;width:44px;height:24px;}
+.toggle{position:relative;width:44px;height:24px;flex-shrink:0;}
 .toggle input{opacity:0;width:0;height:0;}
 .toggle-slider{position:absolute;cursor:pointer;inset:0;background:#ccc;border-radius:24px;transition:.3s;}
 .toggle-slider::before{content:'';position:absolute;width:18px;height:18px;background:#fff;border-radius:50%;left:3px;top:3px;transition:.3s;}
 .toggle input:checked+.toggle-slider{background:var(--primary);}
 .toggle input:checked+.toggle-slider::before{transform:translateX(20px);}
 
-#toast{position:fixed;bottom:24px;right:24px;z-index:999;background:#323232;color:#fff;padding:12px 20px;border-radius:8px;font-size:.875rem;font-weight:600;opacity:0;transform:translateY(20px);transition:.3s;pointer-events:none;}
+#toast{position:fixed;bottom:24px;right:24px;z-index:999;background:#323232;color:#fff;padding:12px 20px;border-radius:8px;font-size:.875rem;font-weight:600;opacity:0;transform:translateY(20px);transition:.3s;pointer-events:none;max-width:400px;}
 #toast.show{opacity:1;transform:translateY(0);}
 
 .no-data{text-align:center;padding:40px 20px;color:var(--muted);}
@@ -167,6 +167,8 @@ tbody td:first-child{font-weight:600;}
 .loading-box{background:#fff;border-radius:12px;padding:32px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.3);}
 .spinner{width:48px;height:48px;border:4px solid #e0e0e0;border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 16px;}
 @keyframes spin{to{transform:rotate(360deg);}}
+
+.url-input{border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;font-size:.82rem;width:100%;max-width:500px;}
 </style>
 </head>
 <body>
@@ -197,7 +199,6 @@ tbody td:first-child{font-weight:600;}
 
 <div class="container">
 
-  <!-- DASHBOARD TAB -->
   <div id="tab-dashboard" class="tab-content active">
     <div class="sync-bar" id="syncBar">
       <div class="sync-dot"></div>
@@ -258,7 +259,6 @@ tbody td:first-child{font-weight:600;}
     </div>
   </div>
 
-  <!-- RECORDS TAB -->
   <div id="tab-records" class="tab-content">
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
@@ -283,7 +283,6 @@ tbody td:first-child{font-weight:600;}
     </div>
   </div>
 
-  <!-- UPLOAD TAB -->
   <div id="tab-upload" class="tab-content">
     <div class="card">
       <div class="card-title"><span>📷</span> Scan Body Composition Report</div>
@@ -311,7 +310,6 @@ tbody td:first-child{font-weight:600;}
     </div>
   </div>
 
-  <!-- COMPARE TAB -->
   <div id="tab-compare" class="tab-content">
     <div class="card">
       <div class="card-title"><span>👥</span> User Comparison</div>
@@ -319,26 +317,27 @@ tbody td:first-child{font-weight:600;}
     </div>
   </div>
 
-  <!-- SETTINGS TAB -->
   <div id="tab-settings" class="tab-content">
     <div class="card">
       <div class="card-title"><span>⚙️</span> Cloud Sync Settings</div>
       <div class="alert alert-info">
-        📖 <strong>How it works:</strong> Enter your Google Apps Script URL below. 
-        When you save a record, it uploads to Google Sheets. 
-        Click "☁️ Load Cloud" button in header to download all records from Google Sheets.
+        📖 <strong>How Cloud Sync Works:</strong><br>
+        1. Deploy your Google Apps Script (see documentation)<br>
+        2. Paste the Web App URL below (must end with <code>/exec</code>)<br>
+        3. Click Test Connection to verify<br>
+        4. Your data will sync automatically when you save records
       </div>
       <div class="settings-row">
-        <div>
+        <div style="flex:1">
           <div class="settings-label">Google Apps Script URL</div>
-          <div class="settings-sub">Your Web app deployment URL (ends with /exec)</div>
+          <div class="settings-sub">Web app deployment URL ending with /exec</div>
         </div>
-        <input id="gsUrl" style="border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;font-size:.82rem;width:340px;max-width:100%" placeholder="https://script.google.com/macros/s/.../exec"/>
+        <input id="gsUrl" class="url-input" placeholder="https://script.google.com/macros/s/.../exec"/>
       </div>
       <div class="settings-row">
         <div>
           <div class="settings-label">Auto-sync on save</div>
-          <div class="settings-sub">Automatically backup to Google Sheets when record is saved</div>
+          <div class="settings-sub">Automatically backup to Google Sheets</div>
         </div>
         <label class="toggle"><input type="checkbox" id="autoSync" checked/><span class="toggle-slider"></span></label>
       </div>
@@ -361,7 +360,6 @@ tbody td:first-child{font-weight:600;}
 
 </div>
 
-<!-- ADD RECORD MODAL -->
 <div class="modal-overlay" id="addModal">
   <div class="modal">
     <div class="modal-header">
@@ -387,7 +385,7 @@ tbody td:first-child{font-weight:600;}
       <div class="form-section-title">🩺 Obesity Diagnosis</div>
       <div class="form-grid">
         <div class="form-group"><label>BMI (kg/m²)</label><input type="number" id="f-bmi" placeholder="24.9" step="0.1"/></div>
-        <div class="form-group"><label>PBF % (Body Fat %)</label><input type="number" id="f-pbf" placeholder="21.7" step="0.1"/></div>
+        <div class="form-group"><label>PBF %</label><input type="number" id="f-pbf" placeholder="21.7" step="0.1"/></div>
         <div class="form-group"><label>WHR</label><input type="number" id="f-whr" placeholder="0.88" step="0.01"/></div>
         <div class="form-group"><label>BMR (kcal)</label><input type="number" id="f-bmr" placeholder="1602"/></div>
       </div>
@@ -424,7 +422,6 @@ tbody td:first-child{font-weight:600;}
   </div>
 </div>
 
-<!-- USER SWITCH MODAL -->
 <div class="modal-overlay" id="userModal">
   <div class="modal" style="max-width:400px">
     <div class="modal-header">
@@ -435,7 +432,6 @@ tbody td:first-child{font-weight:600;}
   </div>
 </div>
 
-<!-- LOADING OVERLAY -->
 <div class="loading-overlay" id="loadingOverlay">
   <div class="loading-box">
     <div class="spinner"></div>
@@ -446,9 +442,12 @@ tbody td:first-child{font-weight:600;}
 <div id="toast"></div>
 
 <script>
-/* ═══════════════════════════════════════════════════════
-   DATA LAYER
-═══════════════════════════════════════════════════════ */
+'use strict';
+
+// ═══════════════════════════════════════════════════════
+// DATA LAYER
+// ═══════════════════════════════════════════════════════
+
 function makeSeedRecords(){
   const base=[
     ['Krit','2025-12-05',75.2,31.8,17.4,40.1,55.8,25.8,23.1,0.90,1578],
@@ -481,12 +480,18 @@ function save(){
   document.getElementById('lastSync').textContent=new Date().toLocaleTimeString();
 }
 
-function latestRecord(u){return db.records.filter(r=>r.user===u).sort((a,b)=>b.date.localeCompare(a.date))[0]||null;}
-function userRecords(u){return db.records.filter(r=>r.user===u).sort((a,b)=>a.date.localeCompare(b.date));}
+function latestRecord(u){
+  return db.records.filter(r=>r.user===u).sort((a,b)=>b.date.localeCompare(a.date))[0]||null;
+}
 
-/* ═══════════════════════════════════════════════════════
-   CHART STATE
-═══════════════════════════════════════════════════════ */
+function userRecords(u){
+  return db.records.filter(r=>r.user===u).sort((a,b)=>a.date.localeCompare(b.date));
+}
+
+// ═══════════════════════════════════════════════════════
+// CHART STATE
+// ═══════════════════════════════════════════════════════
+
 let trendChart=null;
 let chartRangeMonths=3;
 const METRICS={
@@ -498,9 +503,10 @@ const METRICS={
 };
 let activeMetrics={weight:true,muscle:true,fatmass:false,bmi:false,pbf:false};
 
-/* ═══════════════════════════════════════════════════════
-   TABS
-═══════════════════════════════════════════════════════ */
+// ═══════════════════════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════════════════════
+
 function switchTab(name){
   document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
@@ -513,22 +519,20 @@ function switchTab(name){
   if(name==='settings')renderSettings();
 }
 
-/* ═══════════════════════════════════════════════════════
-   MODALS
-═══════════════════════════════════════════════════════ */
 function openModal(id){
   document.getElementById(id).classList.add('show');
   if(id==='addModal')prepareAddModal();
   if(id==='userModal')renderUserSwitch();
 }
-function closeModal(id){document.getElementById(id).classList.remove('show');}
 
-/* ═══════════════════════════════════════════════════════
-   TOAST & LOADING
-═══════════════════════════════════════════════════════ */
+function closeModal(id){
+  document.getElementById(id).classList.remove('show');
+}
+
 function toast(msg,dur=3000){
   const t=document.getElementById('toast');
-  t.textContent=msg;t.classList.add('show');
+  t.textContent=msg;
+  t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),dur);
 }
 
@@ -553,145 +557,275 @@ function setSyncStatus(state,message){
     status.innerHTML=message;
   }else{
     bar.classList.remove('syncing');
-    status.innerHTML=`Data stored locally · Last saved: <strong id="lastSync">${new Date().toLocaleTimeString()}</strong>`;
+    const time=new Date().toLocaleTimeString();
+    status.innerHTML=`Data stored locally · Last saved: <strong id="lastSync">${time}</strong>`;
   }
 }
 
-/* ═══════════════════════════════════════════════════════
-   HELPERS
-═══════════════════════════════════════════════════════ */
-function getStatus(v,min,max){return v<min?'under':v>max?'over':'normal';}
+function getStatus(v,min,max){
+  return v<min?'under':v>max?'over':'normal';
+}
 
-/* ═══════════════════════════════════════════════════════
-   CLOUD SYNC FUNCTIONS
-═══════════════════════════════════════════════════════ */
+// ═══════════════════════════════════════════════════════
+// CLOUD SYNC - BULLETPROOF VERSION
+// ═══════════════════════════════════════════════════════
+
 async function syncToGoogleSheets(){
   const url=db.gsUrl||document.getElementById('gsUrl')?.value;
+  
   if(!url){
-    toast('💡 Add Google Apps Script URL in Settings first');
+    toast('⚠️ Please add Google Apps Script URL in Settings first');
+    return;
+  }
+  
+  if(!url.includes('/exec')){
+    toast('❌ URL must end with /exec (not /dev)');
     return;
   }
   
   const latest=latestRecord(db.currentUser);
   if(!latest){
-    toast('No data to sync');
+    toast('⚠️ No data to sync');
     return;
   }
   
-  setSyncStatus('syncing','☁️ Uploading to cloud...');
+  setSyncStatus('syncing','☁️ Uploading to Google Sheets...');
   
   try{
+    console.log('🚀 Syncing to:',url);
+    console.log('📦 Data:',latest);
+    
+    const controller=new AbortController();
+    const timeoutId=setTimeout(()=>controller.abort(),30000);
+    
     const response=await fetch(url,{
       method:'POST',
-      headers:{'Content-Type':'application/json'},
       body:JSON.stringify(latest),
-      redirect:'follow'
+      headers:{'Content-Type':'application/json'},
+      redirect:'follow',
+      signal:controller.signal
     });
     
-    const text=await response.text();
-    console.log('Sync response:',text);
+    clearTimeout(timeoutId);
     
-    try{
-      const data=JSON.parse(text);
-      if(data.status==='success'){
-        setSyncStatus('success','✅ Synced to Google Sheets!');
-        toast('✅ Data uploaded successfully!');
-      }else{
-        setSyncStatus('idle','');
-        toast('⚠️ Sync response: '+data.message);
-      }
-    }catch(e){
-      setSyncStatus('success','✅ Data sent to cloud');
-      toast('✅ Data uploaded (check your Google Sheet)');
+    console.log('📡 Response status:',response.status);
+    
+    if(!response.ok){
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    const text=await response.text();
+    console.log('📄 Response body:',text);
+    
+    const data=JSON.parse(text);
+    
+    if(data.status==='success'){
+      setSyncStatus('success','✅ Synced at '+new Date().toLocaleTimeString());
+      toast('✅ Data uploaded to Google Sheets!');
+      setTimeout(()=>setSyncStatus('idle',''),3000);
+    }else if(data.status==='error'){
+      throw new Error(data.message||'Unknown error');
+    }else{
+      throw new Error('Unexpected response format');
     }
     
   }catch(err){
-    console.error('Sync error:',err);
+    console.error('❌ Sync failed:',err);
     setSyncStatus('idle','');
-    toast('❌ Sync failed: '+err.message);
+    
+    let userMessage='❌ Sync failed: ';
+    
+    if(err.name==='AbortError'){
+      userMessage+='Request timeout. Check internet connection.';
+    }else if(err.message.includes('Failed to fetch')){
+      userMessage+='Cannot reach server. Verify:\n• URL ends with /exec\n• Internet is working\n• Apps Script is deployed';
+    }else if(err.message.includes('HTTP 403')){
+      userMessage+='Access denied. Re-deploy with "Anyone" access.';
+    }else if(err.message.includes('HTTP 404')){
+      userMessage+='Script not found. Check your URL.';
+    }else if(err.message.includes('HTTP 405')){
+      userMessage+='Wrong URL. Must end with /exec not /dev';
+    }else{
+      userMessage+=err.message;
+    }
+    
+    toast(userMessage,5000);
   }
-  
-  setTimeout(()=>setSyncStatus('idle',''),3000);
 }
 
 async function loadFromCloud(){
   const url=db.gsUrl||document.getElementById('gsUrl')?.value;
+  
   if(!url){
-    toast('⚠️ Please set your Google Apps Script URL in Settings first');
+    toast('⚠️ Set Google Apps Script URL in Settings first');
     return;
   }
   
-  showLoading('📥 Loading data from cloud...');
+  if(!url.includes('/exec')){
+    toast('❌ URL must end with /exec');
+    return;
+  }
+  
+  showLoading('📥 Loading from Google Sheets...');
   
   try{
+    console.log('🚀 Loading from:',url);
+    
+    const controller=new AbortController();
+    const timeoutId=setTimeout(()=>controller.abort(),30000);
+    
     const response=await fetch(url,{
       method:'POST',
-      headers:{'Content-Type':'application/json'},
       body:JSON.stringify({action:'read'}),
-      redirect:'follow'
+      headers:{'Content-Type':'application/json'},
+      redirect:'follow',
+      signal:controller.signal
     });
     
+    clearTimeout(timeoutId);
+    
+    console.log('📡 Response status:',response.status);
+    
+    if(!response.ok){
+      throw new Error(`HTTP ${response.status}`);
+    }
+    
     const text=await response.text();
-    console.log('Load response:',text);
+    console.log('📄 Response:',text);
     
     const data=JSON.parse(text);
     
-    if(data.status==='success'&&data.records){
-      const existingDates=new Set(db.records.map(r=>r.user+'|'+r.date));
-      const newRecords=data.records.filter(r=>!existingDates.has(r.user+'|'+r.date));
-      
-      db.records=[...db.records,...newRecords];
-      save();
-      
-      hideLoading();
-      toast(`✅ Loaded ${data.count} records from cloud (${newRecords.length} new)`);
-      
-      if(document.getElementById('tab-dashboard').classList.contains('active')){
-        renderDashboard();
+    hideLoading();
+    
+    if(data.status==='success'){
+      if(data.data&&data.data.records){
+        const cloudRecords=data.data.records;
+        
+        if(cloudRecords.length===0){
+          toast('📭 No records in Google Sheets yet');
+          return;
+        }
+        
+        const existingKeys=new Set(
+          db.records.map(r=>`${r.user}|${r.date}|${r.weight}`)
+        );
+        
+        const newRecords=cloudRecords.filter(r=>
+          !existingKeys.has(`${r.user}|${r.date}|${r.weight}`)
+        );
+        
+        if(newRecords.length>0){
+          db.records=[...db.records,...newRecords];
+          save();
+          toast(`✅ Loaded ${cloudRecords.length} records (${newRecords.length} new)`);
+        }else{
+          toast(`✅ All ${cloudRecords.length} cloud records already synced`);
+        }
+        
+        if(document.getElementById('tab-dashboard').classList.contains('active')){
+          renderDashboard();
+        }
+      }else{
+        toast('⚠️ Unexpected data format from cloud');
       }
+    }else if(data.status==='error'){
+      toast('❌ Cloud error: '+data.message);
     }else{
-      hideLoading();
-      toast('⚠️ No data found in cloud');
+      toast('⚠️ Unexpected response from cloud');
     }
     
   }catch(err){
-    console.error('Load error:',err);
+    console.error('❌ Load failed:',err);
     hideLoading();
-    toast('❌ Failed to load from cloud: '+err.message);
+    
+    let userMessage='❌ Load failed: ';
+    
+    if(err.name==='AbortError'){
+      userMessage+='Request timeout';
+    }else if(err.message.includes('Failed to fetch')){
+      userMessage+='Cannot reach server';
+    }else{
+      userMessage+=err.message;
+    }
+    
+    toast(userMessage,5000);
   }
 }
 
 async function testConnection(){
   const url=db.gsUrl||document.getElementById('gsUrl')?.value;
+  
   if(!url){
-    toast('⚠️ Please enter Google Apps Script URL first');
+    toast('⚠️ Enter Google Apps Script URL first');
+    return;
+  }
+  
+  if(!url.includes('script.google.com')){
+    toast('❌ Not a Google Apps Script URL');
+    return;
+  }
+  
+  if(!url.includes('/exec')){
+    toast('⚠️ URL should end with /exec (you have /dev?)');
     return;
   }
   
   showLoading('🧪 Testing connection...');
   
   try{
-    const response=await fetch(url);
+    console.log('🧪 Testing URL:',url);
+    
+    const controller=new AbortController();
+    const timeoutId=setTimeout(()=>controller.abort(),10000);
+    
+    const response=await fetch(url,{
+      method:'GET',
+      redirect:'follow',
+      signal:controller.signal
+    });
+    
+    clearTimeout(timeoutId);
+    
+    console.log('Response status:',response.status);
+    
     const text=await response.text();
+    console.log('Response text:',text);
     
     hideLoading();
     
-    if(text.includes('BodyTrack API')){
-      toast('✅ Connection successful! Ready to sync.');
-    }else{
-      toast('⚠️ Got response but endpoint may be incorrect');
+    try{
+      const data=JSON.parse(text);
+      if(data.service&&data.service.includes('BodyTrack')){
+        toast('✅ Connection successful! Ready to sync.',3000);
+        console.log('✅ Test passed');
+      }else{
+        toast('⚠️ Connected but unexpected response',3000);
+      }
+    }catch(e){
+      toast('⚠️ Connected but response not JSON',3000);
     }
+    
   }catch(err){
+    console.error('❌ Test failed:',err);
     hideLoading();
-    toast('❌ Connection failed. Check your URL.');
+    
+    if(err.name==='AbortError'){
+      toast('❌ Connection timeout (>10s)');
+    }else if(err.message.includes('Failed to fetch')){
+      toast('❌ Cannot reach URL. Check:\n• URL is correct\n• Internet works\n• Script is deployed');
+    }else{
+      toast('❌ Test failed: '+err.message);
+    }
   }
 }
 
-/* ═══════════════════════════════════════════════════════
-   RENDER DASHBOARD
-═══════════════════════════════════════════════════════ */
+// ═══════════════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════════════
+
 function renderDashboard(){
   const r=latestRecord(db.currentUser);
+  
   if(!r){
     document.getElementById('statsRow').innerHTML='<div class="no-data"><div class="no-data-icon">📭</div>No records yet — add your first!</div>';
     return;
@@ -804,9 +938,10 @@ function msl(name,val,st,unit,C,pos){
   </div>`;
 }
 
-/* ═══════════════════════════════════════════════════════
-   TREND CHART
-═══════════════════════════════════════════════════════ */
+// ═══════════════════════════════════════════════════════
+// TREND CHART
+// ═══════════════════════════════════════════════════════
+
 function getFilteredRecords(){
   let recs=userRecords(db.currentUser);
   if(chartRangeMonths>0){
@@ -954,9 +1089,10 @@ function setRange(months){
   renderTrendChart();
 }
 
-/* ═══════════════════════════════════════════════════════
-   RECORDS TABLE
-═══════════════════════════════════════════════════════ */
+// ═══════════════════════════════════════════════════════
+// RECORDS
+// ═══════════════════════════════════════════════════════
+
 function renderRecords(filter=''){
   let rows=[...db.records].sort((a,b)=>b.date.localeCompare(a.date));
   if(filter)rows=rows.filter(r=>r.user.toLowerCase().includes(filter.toLowerCase())||r.date.includes(filter));
@@ -978,9 +1114,10 @@ function deleteRecord(id){
   save();renderRecords();toast('Record deleted');
 }
 
-/* ═══════════════════════════════════════════════════════
-   ADD RECORD MODAL
-═══════════════════════════════════════════════════════ */
+// ═══════════════════════════════════════════════════════
+// ADD RECORD
+// ═══════════════════════════════════════════════════════
+
 function prepareAddModal(){
   const sel=document.getElementById('f-user');
   sel.innerHTML=db.users.map(u=>`<option ${u===db.currentUser?'selected':''}>${u}</option>`).join('');
@@ -1047,9 +1184,10 @@ function saveRecord(){
   }
 }
 
-/* ═══════════════════════════════════════════════════════
-   IMAGE UPLOAD
-═══════════════════════════════════════════════════════ */
+// ═══════════════════════════════════════════════════════
+// IMAGE UPLOAD
+// ═══════════════════════════════════════════════════════
+
 function handleImageUpload(event){
   const file=event.target.files[0];
   if(!file){
@@ -1154,9 +1292,10 @@ function cancelExtract(){
   document.getElementById('ocrStatus').innerHTML='';
 }
 
-/* ═══════════════════════════════════════════════════════
-   COMPARE USERS
-═══════════════════════════════════════════════════════ */
+// ═══════════════════════════════════════════════════════
+// COMPARE
+// ═══════════════════════════════════════════════════════
+
 function renderCompare(){
   const metrics=['weight','muscle','fatMass','bmi','pbf','bmr'];
   const labels={weight:'Weight (kg)',muscle:'Muscle (kg)',fatMass:'Fat (kg)',bmi:'BMI',pbf:'PBF (%)',bmr:'BMR (kcal)'};
@@ -1183,9 +1322,10 @@ function renderCompare(){
   document.getElementById('compareSection').innerHTML=html||'<div class="no-data">No data</div>';
 }
 
-/* ═══════════════════════════════════════════════════════
-   SETTINGS
-═══════════════════════════════════════════════════════ */
+// ═══════════════════════════════════════════════════════
+// SETTINGS
+// ═══════════════════════════════════════════════════════
+
 function renderSettings(){
   document.getElementById('gsUrl').value=db.gsUrl||'';
   document.getElementById('autoSync').checked=db.autoSync!==false;
@@ -1227,9 +1367,10 @@ function clearAllData(){
   db.records=[];save();renderDashboard();toast('🗑 Local data cleared');
 }
 
-/* ═══════════════════════════════════════════════════════
-   USER SWITCH
-═══════════════════════════════════════════════════════ */
+// ═══════════════════════════════════════════════════════
+// USER SWITCH
+// ═══════════════════════════════════════════════════════
+
 function renderUserSwitch(){
   document.getElementById('userSwitchList').innerHTML=db.users.map(u=>`
     <div onclick="switchUser('${u}')" style="display:flex;align-items:center;gap:12px;padding:12px;cursor:pointer;border-radius:10px;transition:.2s;${u===db.currentUser?'background:#e8f0fe':''}" onmouseover="this.style.background='#f0f4f8'" onmouseout="this.style.background='${u===db.currentUser?'#e8f0fe':''}'">
@@ -1246,9 +1387,10 @@ function switchUser(u){
   closeModal('userModal');renderDashboard();toast(`Switched to ${u}`);
 }
 
-/* ═══════════════════════════════════════════════════════
-   CSV EXPORT
-═══════════════════════════════════════════════════════ */
+// ═══════════════════════════════════════════════════════
+// EXPORT
+// ═══════════════════════════════════════════════════════
+
 function exportCSV(){
   const h=['User','Date','Weight','Muscle','FatMass','TBW','FFM','BMI','PBF','WHR','BMR','MuscleCtrl','FatCtrl'];
   const rows=db.records.map(r=>[r.user,r.date,r.weight,r.muscle,r.fatMass,r.tbw,r.ffm,r.bmi,r.pbf,r.whr,r.bmr,r.mc,r.fc]);
@@ -1260,10 +1402,13 @@ function exportCSV(){
   toast('📥 CSV exported!');
 }
 
-/* ═══════════════════════════════════════════════════════
-   INIT
-═══════════════════════════════════════════════════════ */
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+
 document.addEventListener('DOMContentLoaded',()=>{
+  console.log('🚀 BodyTrack Pro initialized');
+  console.log('📊 Records loaded:',db.records.length);
   renderDashboard();
 });
 </script>
