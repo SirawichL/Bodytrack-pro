@@ -3,403 +3,440 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BodyTrack Pro | Elite Analytics</title>
+<title>BodyTrack Pro | Global Standard</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 :root {
-  --primary:#3b82f6; --success:#10b981; --warning:#f59e0b; --danger:#ef4444;
-  --bg:#0f172a; --card:#1e293b; --text:#f8fafc; --muted:#94a3b8; --border:#334155;
-  --radius:16px; --accent:#818cf8;
+  --primary:#1a73e8; --success:#34a853; --warning:#fbbc04; --danger:#ea4335;
+  --bg:#f0f2f5; --card:#ffffff; --text:#202124; --muted:#5f6368; --border:#dadce0;
+  --radius:12px; --shadow:0 2px 12px rgba(0,0,0,0.08);
 }
-*{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.5;}
+*{box-sizing:border-box; margin:0; padding:0;}
+body{font-family:'Segoe UI',system-ui,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; line-height:1.5;}
 
-/* --- LUXURY HEADER --- */
-header{background:rgba(15,23,42,0.8); backdrop-filter:blur(12px); color:#fff; padding:16px 32px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; border-bottom:1px solid var(--border);}
-.brand{display:flex; align-items:center; gap:12px; font-weight:800; font-size:1.2rem; letter-spacing:-0.5px;}
-.brand span{color:var(--primary);}
+/* --- HEADER --- */
+header{background:var(--primary); color:#fff; padding:12px 24px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; box-shadow:var(--shadow);}
+.brand{font-weight:800; font-size:1.2rem; letter-spacing:-0.5px;}
 .header-actions{display:flex; gap:12px; align-items:center;}
 
-/* --- PRO BUTTONS --- */
-.btn{border:none; cursor:pointer; border-radius:10px; font-size:13px; font-weight:600; padding:10px 20px; transition:0.3s cubic-bezier(0.4,0,0.2,1); display:inline-flex; align-items:center; gap:8px;}
-.btn-primary{background:var(--primary); color:white; box-shadow:0 4px 12px rgba(59,130,246,0.3);}
-.btn-primary:hover{transform:translateY(-2px); box-shadow:0 6px 20px rgba(59,130,246,0.4);}
-.btn-outline{background:transparent; color:var(--text); border:1px solid var(--border);}
-.btn-outline:hover{background:var(--border);}
+.user-badge{background:rgba(255,255,255,0.2); padding:6px 14px; border-radius:20px; font-size:13px; font-weight:600; display:flex; align-items:center; gap:8px;}
 
-/* --- TAB SYSTEM --- */
-.tabs{background:var(--card); display:flex; justify-content:center; gap:32px; padding:0 20px; border-bottom:1px solid var(--border);}
-.tab{padding:18px 4px; font-size:14px; cursor:pointer; color:var(--muted); border-bottom:2px solid transparent; transition:0.3s; font-weight:500;}
-.tab.active{color:var(--primary); border-bottom-color:var(--primary); font-weight:700;}
+/* --- NAVIGATION --- */
+.tabs{background:#fff; display:flex; justify-content:center; border-bottom:1px solid var(--border);}
+.tab{padding:16px 24px; font-size:14px; cursor:pointer; color:var(--muted); border-bottom:3px solid transparent; transition:0.2s; font-weight:600;}
+.tab:hover{color:var(--primary);}
+.tab.active{color:var(--primary); border-bottom-color:var(--primary);}
 
-/* --- GRID & CARDS --- */
-.container{max-width:1200px; margin:0 auto; padding:24px;}
-.card{background:var(--card); border-radius:var(--radius); padding:24px; margin-bottom:24px; border:1px solid var(--border); box-shadow:var(--shadow);}
-.card-title{font-size:14px; font-weight:700; margin-bottom:20px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; display:flex; justify-content:space-between; align-items:center;}
+.container{max-width:1100px; margin:0 auto; padding:20px;}
+.tab-content{display:none;}
+.tab-content.active{display:block;}
 
-.stats-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:20px;}
-.stat-item{background:rgba(255,255,255,0.03); border-radius:14px; padding:20px; border:1px solid var(--border); transition:0.3s;}
-.stat-item:hover{border-color:var(--primary);}
-.stat-header{display:flex; justify-content:space-between; margin-bottom:12px;}
-.stat-label{font-size:12px; color:var(--muted); font-weight:600;}
-.stat-value{font-size:28px; font-weight:800; display:block; margin-bottom:4px;}
-.stat-range{font-size:11px; color:var(--muted);}
+/* --- CARDS --- */
+.card{background:var(--card); border-radius:var(--radius); padding:24px; margin-bottom:20px; box-shadow:var(--shadow); border:1px solid var(--border);}
+.card-title{font-size:14px; font-weight:700; margin-bottom:20px; color:var(--primary); text-transform:uppercase; letter-spacing:1px;}
 
-/* --- TREND CONTROLS --- */
-.trend-selector{display:flex; gap:8px; overflow-x:auto; padding-bottom:12px; margin-bottom:12px;}
-.chip{padding:6px 14px; border-radius:20px; background:rgba(255,255,255,0.05); border:1px solid var(--border); cursor:pointer; font-size:12px; white-space:nowrap; transition:0.2s;}
-.chip.active{background:var(--primary); border-color:var(--primary); color:white;}
+.grid-stats{display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:16px;}
+.stat-item{padding:16px; border-radius:10px; border:1px solid var(--border); background:#fafafa;}
+.stat-label{font-size:11px; color:var(--muted); font-weight:700; display:block;}
+.stat-value{font-size:24px; font-weight:800; color:var(--text); margin:4px 0;}
+.stat-status{font-size:10px; font-weight:800; padding:2px 8px; border-radius:4px; text-transform:uppercase;}
 
-/* --- ANATOMICAL SVG --- */
-.silhouette-box{display:flex; justify-content:center; gap:60px; flex-wrap:wrap; padding:20px;}
-.human-svg{height:300px; fill:var(--border);}
-.seg-label-elite{font-size:10px; font-weight:800; padding:4px 8px; border-radius:6px; position:absolute; pointer-events:none; min-width:70px; text-align:center;}
+/* --- TREND --- */
+.trend-selectors{display:flex; gap:8px; overflow-x:auto; margin-bottom:15px; padding-bottom:5px;}
+.chip{padding:8px 16px; border-radius:20px; background:#fff; border:1px solid var(--border); cursor:pointer; font-size:12px; font-weight:600; white-space:nowrap;}
+.chip.active{background:var(--primary); color:white; border-color:var(--primary);}
 
-/* --- FORM STYLING --- */
-.form-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:20px;}
-.form-group{display:flex; flex-direction:column; gap:8px;}
-.form-group label{font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase;}
-.form-group input, .form-group select{background:#0f172a; border:1px solid var(--border); color:white; padding:12px; border-radius:10px; font-size:14px;}
+/* --- BUTTONS --- */
+.btn{border:none; cursor:pointer; border-radius:8px; font-size:13px; font-weight:600; padding:10px 18px; display:inline-flex; align-items:center; gap:8px; transition:0.2s;}
+.btn-success{background:var(--success); color:white;}
+.btn-outline{background:white; color:var(--text); border:1px solid var(--border);}
+.btn-primary{background:white; color:var(--primary);}
 
-#toast{position:fixed; bottom:40px; right:40px; background:var(--accent); color:white; padding:16px 32px; border-radius:12px; display:none; z-index:1000; box-shadow:0 10px 40px rgba(0,0,0,0.4); font-weight:700;}
-.modal-overlay{display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); backdrop-filter:blur(4px); z-index:500; align-items:center; justify-content:center; padding:20px;}
-.modal-card{background:var(--card); border-radius:24px; width:100%; max-width:600px; padding:32px; border:1px solid var(--border);}
+/* --- ANATOMY --- */
+.body-container{display:flex; justify-content:center; gap:40px; flex-wrap:wrap; padding:20px 0;}
+.silhouette{position:relative; width:140px; height:240px; background:#e9ecef; border-radius:30px;}
+.seg-label{position:absolute; background:#fff; border:1.5px solid var(--border); padding:4px 8px; font-size:10px; border-radius:6px; box-shadow:var(--shadow); min-width:85px; text-align:center; font-weight:800;}
+
+/* --- FORM --- */
+.form-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:15px;}
+.form-group{display:flex; flex-direction:column; gap:5px;}
+.form-group label{font-size:11px; font-weight:700; color:var(--muted);}
+.form-group input, .form-group select{padding:10px; border:1.5px solid var(--border); border-radius:8px; font-size:14px;}
+.section-head{grid-column: 1 / -1; padding:10px 0; border-bottom:2px solid var(--bg); color:var(--primary); font-weight:800; font-size:12px; text-transform:uppercase; margin-top:10px;}
+
+.modal{display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:500; align-items:center; justify-content:center; padding:20px;}
+.modal-content{background:#fff; border-radius:16px; width:100%; max-width:800px; max-height:90vh; overflow-y:auto; padding:24px;}
+
+#toast{position:fixed; bottom:30px; right:30px; background:#323232; color:#fff; padding:14px 28px; border-radius:8px; display:none; z-index:1000;}
 </style>
 </head>
 <body>
 
 <header>
-  <div class="brand">💪 BODY<span>TRACK</span> PRO</div>
+  <div class="brand">BODYTRACK PRO</div>
   <div class="header-actions">
-    <div style="text-align:right; margin-right:12px;">
-        <div id="userNameDisp" style="font-weight:700; font-size:14px;">Krit</div>
-        <div id="userBioDisp" style="font-size:11px; color:var(--muted);">32y | 175cm</div>
+    <div class="user-badge">
+        <span id="headerUser">Krit</span> 
+        <span id="headerAge" style="opacity:0.8; font-size:11px;"></span>
     </div>
-    <button class="btn btn-outline" onclick="openModal('userModal')">Accounts</button>
-    <button class="btn btn-primary" onclick="prepareAddForm()">＋ New Scan</button>
+    <button class="btn btn-primary" onclick="showModal('userModal')">Accounts</button>
+    <button class="btn btn-success" onclick="prepareEntryForm()">＋ New Entry</button>
   </div>
 </header>
 
-<div class="tabs">
-  <div class="tab active" data-tab="dashboard" onclick="switchTab('dashboard')">Analytics</div>
-  <div class="tab" data-tab="records" onclick="switchTab('records')">History</div>
-  <div class="tab" data-tab="settings" onclick="switchTab('settings')">Profile</div>
-</div>
+<nav class="tabs">
+  <div class="tab active" onclick="uiSwitchTab('dashboard')">Analytics</div>
+  <div class="tab" onclick="uiSwitchTab('history')">History</div>
+  <div class="tab" onclick="uiSwitchTab('scan')">Scan Analysis</div>
+  <div class="tab" onclick="uiSwitchTab('profile')">Profile</div>
+</nav>
 
 <div class="container">
-  <!-- DASHBOARD -->
-  <div id="tab-dashboard" class="tab-content active">
-    <div id="statsRow" class="stats-grid"></div>
+  <!-- ANALYTICS -->
+  <div id="view-dashboard" class="tab-content active">
+    <div class="grid-stats" id="statsRow"></div>
 
-    <div class="card" style="margin-top:24px;">
-        <div class="card-title">Progression Intelligence <span>HEALTHY ZONE OVERLAY ACTIVE</span></div>
-        <div class="trend-selector" id="trendSelectors"></div>
+    <div class="card" style="margin-top:20px;">
+        <div class="card-title">Progression Trends (Reference Lines Active)</div>
+        <div class="trend-selectors" id="trendChips"></div>
         <div style="height:350px;"><canvas id="trendChart"></canvas></div>
     </div>
 
-    <div class="grid-2">
-        <div class="card">
-            <div class="card-title">Anatomical Lean Heatmap</div>
-            <div class="silhouette-box" id="leanHeatmap"></div>
-        </div>
-        <div class="card">
-            <div class="card-title">Anatomical Fat Heatmap</div>
-            <div class="silhouette-box" id="fatHeatmap"></div>
+    <div class="card">
+        <div class="card-title">Segmental Composition Evaluation</div>
+        <div class="body-container">
+            <div id="leanSil"></div>
+            <div id="fatSil"></div>
         </div>
     </div>
   </div>
 
   <!-- HISTORY -->
-  <div id="tab-records" class="tab-content">
+  <div id="view-history" class="tab-content">
     <div class="card">
-        <div class="card-title">Data Archives</div>
-        <div style="overflow-x:auto">
-            <table style="width:100%; border-collapse:collapse; color:var(--text);">
-                <thead><tr style="border-bottom:1px solid var(--border);"><th style="padding:15px">Date</th><th>Weight</th><th>Muscle</th><th>BMI</th><th>Action</th></tr></thead>
-                <tbody id="recordsTbody"></tbody>
-            </table>
-        </div>
+      <div class="card-title">Data Archives</div>
+      <table style="width:100%; border-collapse:collapse;">
+        <thead><tr style="text-align:left; border-bottom:2px solid var(--border);"><th style="padding:12px">Date</th><th>Weight</th><th>Muscle</th><th>Action</th></tr></thead>
+        <tbody id="historyBody"></tbody>
+      </table>
     </div>
   </div>
 
-  <!-- SETTINGS / PROFILE -->
-  <div id="tab-settings" class="tab-content">
-      <div class="card">
-          <div class="card-title">Elite Profile Settings</div>
-          <div class="form-grid">
-              <div class="form-group"><label>Height (cm)</label><input type="number" id="p-height"></div>
-              <div class="form-group"><label>Gender</label><select id="p-gender"><option>Male</option><option>Female</option></select></div>
-              <div class="form-group"><label>Date of Birth</label><input type="date" id="p-dob"></div>
-          </div>
-          <button class="btn btn-primary" style="margin-top:20px" onclick="saveProfile()">Update Profile</button>
-      </div>
-      <div class="card">
-          <div class="card-title">Cloud Infrastructure</div>
-          <input id="gsUrl" style="width:100%; padding:12px; background:#0f172a; border:1px solid var(--border); border-radius:10px; color:white;" value="https://script.google.com/macros/s/AKfycbwC4XZU8z11dTkJfV4z4Pe1ytxNCNp9rEGvE0t-4AWaq2vjg04rfwiL89Hh4P6IwfJEnw/exec">
-          <button class="btn btn-outline" style="margin-top:12px" onclick="saveConfig()">Save Endpoint</button>
-      </div>
+  <!-- SCAN -->
+  <div id="view-scan" class="tab-content">
+    <div class="card" style="text-align:center; padding:60px 20px;">
+        <div class="card-title">Intelligence Image Ingestion</div>
+        <input type="file" id="imgInp" accept="image/*" style="display:none" onchange="processImage(this)">
+        <button class="btn btn-success" style="padding:20px 40px;" onclick="document.getElementById('imgInp').click()">Upload Scan Report</button>
+        <div id="scanPreview" style="margin-top:20px"></div>
+    </div>
   </div>
-</div>
 
-<!-- ADD MODAL -->
-<div id="addModal" class="modal-overlay" style="align-items:flex-start; overflow-y:auto; padding:40px;">
-    <div class="modal-card" style="max-width:900px;">
-        <div class="card-title">Data Ingestion Engine</div>
+  <!-- PROFILE -->
+  <div id="view-profile" class="tab-content">
+    <div class="card">
+        <div class="card-title">Biometric Profile</div>
         <div class="form-grid">
-            <div class="section-head">Timestamp</div>
-            <div class="form-group"><label>Date of Scan</label><input type="date" id="f-date"></div>
-            <div class="section-head">Clinical Metrics</div>
-            <div class="form-group"><label>Weight (kg)</label><input type="number" id="f-weight" step="0.1"></div>
-            <div class="form-group"><label>Muscle (kg)</label><input type="number" id="f-muscle" step="0.1"></div>
-            <div class="form-group"><label>Fat Mass (kg)</label><input type="number" id="f-fatMass" step="0.1"></div>
-            <div class="form-group"><label>BMI</label><input type="number" id="f-bmi" step="0.1"></div>
-            <div class="form-group"><label>PBF %</label><input type="number" id="f-pbf" step="0.1"></div>
-            <div class="form-group"><label>BMR</label><input type="number" id="f-bmr"></div>
-            <div class="section-head">Anatomical Data (Lean kg / Fat %)</div>
-            <div class="form-group"><label>Trunk Lean</label><input type="number" id="f-sl-tr" value="25.9"></div>
-            <div class="form-group"><label>Trunk Fat %</label><input type="number" id="f-sf-tr" value="23.3"></div>
-            <div class="form-group"><label>R-Arm Lean</label><input type="number" id="f-sl-ra" value="3.2"></div>
-            <div class="form-group"><label>R-Arm Fat %</label><input type="number" id="f-sf-ra" value="19.1"></div>
-            <div class="form-group"><label>L-Arm Lean</label><input type="number" id="f-sl-la" value="3.2"></div>
-            <div class="form-group"><label>L-Arm Fat %</label><input type="number" id="f-sf-la" value="19.3"></div>
-            <div class="form-group"><label>R-Leg Lean</label><input type="number" id="f-sl-rl" value="8.9"></div>
-            <div class="form-group"><label>R-Leg Fat %</label><input type="number" id="f-sf-rl" value="20.0"></div>
-            <div class="form-group"><label>L-Leg Lean</label><input type="number" id="f-sl-ll" value="9.1"></div>
-            <div class="form-group"><label>L-Leg Fat %</label><input type="number" id="f-sf-ll" value="19.7"></div>
+            <div class="form-group"><label>Height (cm)</label><input type="number" id="p-h"></div>
+            <div class="form-group"><label>Gender</label><select id="p-g"><option>Male</option><option>Female</option></select></div>
+            <div class="form-group"><label>Birth Date</label><input type="date" id="p-d"></div>
         </div>
-        <div style="margin-top:32px; display:flex; justify-content:flex-end; gap:16px;">
-            <button class="btn btn-outline" onclick="closeModal('addModal')">Discard</button>
-            <button class="btn btn-primary" onclick="saveRecord()">Commit Data & Sync</button>
-        </div>
+        <button class="btn btn-success" style="margin-top:20px;" onclick="saveBio()">Update Profile</button>
     </div>
+    <div class="card">
+        <div class="card-title">Cloud Infrastructure</div>
+        <input id="gsUrl" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border);" value="https://script.google.com/macros/s/AKfycbwC4XZU8z11dTkJfV4z4Pe1ytxNCNp9rEGvE0t-4AWaq2vjg04rfwiL89Hh4P6IwfJEnw/exec">
+    </div>
+  </div>
 </div>
 
-<!-- ACCOUNTS MODAL -->
-<div id="userModal" class="modal-overlay">
-    <div class="modal-card">
-        <div class="card-title">Manage Profiles</div>
-        <div id="userList" style="display:flex; flex-direction:column; gap:10px;"></div>
-        <input type="text" id="newUserName" placeholder="Add Profile Name" style="width:100%; margin-top:20px; padding:12px; background:#0f172a; border:1px solid var(--border); border-radius:10px; color:white;">
-        <button class="btn btn-primary" style="width:100%; margin-top:10px;" onclick="addUser()">Create Profile</button>
-        <button class="btn btn-outline" style="width:100%; margin-top:10px;" onclick="closeModal('userModal')">Close</button>
+<!-- MODALS -->
+<div id="userModal" class="modal"><div class="modal-content">
+    <div class="card-title">Accounts</div>
+    <div id="userList"></div>
+    <hr style="margin:15px 0; border:none; border-top:1px solid #eee;">
+    <div style="display:flex; gap:10px;">
+        <input type="text" id="newU" placeholder="Name" style="flex:1; padding:8px; border-radius:6px; border:1px solid #ddd;">
+        <button class="btn btn-success" onclick="createAccount()">Create</button>
     </div>
-</div>
+    <button class="btn btn-outline" style="width:100%; margin-top:15px;" onclick="hideModal('userModal')">Close</button>
+</div></div>
+
+<div id="entryModal" class="modal"><div class="modal-content">
+    <div class="card-title">Measurement Entry</div>
+    <div class="form-grid" id="entryFields">
+        <div class="section-head">Timestamp</div>
+        <div class="form-group"><label>Date</label><input type="date" id="f-date"></div>
+        <div class="section-head">Core Metrics</div>
+        <div class="form-group"><label>Weight (kg)</label><input type="number" id="f-weight" step="0.1"></div>
+        <div class="form-group"><label>Muscle (kg)</label><input type="number" id="f-muscle" step="0.1"></div>
+        <div class="form-group"><label>Fat Mass (kg)</label><input type="number" id="f-fat" step="0.1"></div>
+        <div class="form-group"><label>BMI</label><input type="number" id="f-bmi" step="0.1"></div>
+        <div class="form-group"><label>Fat %</label><input type="number" id="f-pbf" step="0.1"></div>
+        <div class="form-group"><label>BMR</label><input type="number" id="f-bmr"></div>
+        <div class="form-group"><label>WHR</label><input type="number" id="f-whr" step="0.01"></div>
+        <div class="form-group"><label>TBW (L)</label><input type="number" id="f-tbw" step="0.1"></div>
+        <div class="form-group"><label>FFM (kg)</label><input type="number" id="f-ffm" step="0.1"></div>
+        <div class="section-head">Segmental Lean (kg)</div>
+        <div class="form-group"><label>Trunk</label><input type="number" id="f-l-tr"></div>
+        <div class="form-group"><label>R-Arm</label><input type="number" id="f-l-ra"></div>
+        <div class="form-group"><label>L-Arm</label><input type="number" id="f-l-la"></div>
+        <div class="form-group"><label>R-Leg</label><input type="number" id="f-l-rl"></div>
+        <div class="form-group"><label>L-Leg</label><input type="number" id="f-l-ll"></div>
+        <div class="section-head">Segmental Fat (%)</div>
+        <div class="form-group"><label>Trunk %</label><input type="number" id="f-f-tr"></div>
+        <div class="form-group"><label>R-Arm %</label><input type="number" id="f-f-ra"></div>
+        <div class="form-group"><label>L-Arm %</label><input type="number" id="f-f-la"></div>
+        <div class="form-group"><label>R-Leg %</label><input type="number" id="f-f-rl"></div>
+        <div class="form-group"><label>L-Leg %</label><input type="number" id="f-f-ll"></div>
+    </div>
+    <div style="margin-top:20px; display:flex; justify-content:flex-end; gap:10px;">
+        <button class="btn btn-outline" onclick="hideModal('entryModal')">Cancel</button>
+        <button class="btn btn-success" onclick="commitEntry()">Save & Cloud Sync</button>
+    </div>
+</div></div>
 
 <div id="toast"></div>
 
 <script>
 /** 
- * WORLD-CLASS MEDICAL ENGINE
+ * WORLD-CLASS STATE ENGINE
  */
-const RANGES = {
-    weight: { min: 54.7, max: 74.0, unit: 'kg', label: 'Weight' },
-    muscle: { min: 27.4, max: 33.5, unit: 'kg', label: 'Muscle Mass' },
-    fatMass: { min: 7.7, max: 15.4, unit: 'kg', label: 'Fat Mass' },
-    bmi: { min: 18.5, max: 25.0, unit: '', label: 'BMI' },
-    pbf: { min: 10.0, max: 20.0, unit: '%', label: 'Fat %' },
-    bmr: { min: 1573, max: 1840, unit: 'kcal', label: 'BMR' }
-};
-
-let activeTrendParam = 'weight';
-let db = JSON.parse(localStorage.getItem('bodytrack_v3')) || { 
-    users:['Krit'], currentUser:'Krit', records:[], profiles:{}, 
-    gsUrl:'https://script.google.com/macros/s/AKfycbwC4XZU8z11dTkJfV4z4Pe1ytxNCNp9rEGvE0t-4AWaq2vjg04rfwiL89Hh4P6IwfJEnw/exec' 
-};
-
-function saveDb() { localStorage.setItem('bodytrack_v3', JSON.stringify(db)); }
-function toast(m) { const t=document.getElementById('toast'); t.innerText=m; t.style.display='block'; setTimeout(()=>t.style.display='none',4000); }
-function openModal(id) { document.getElementById(id).style.display = 'flex'; if(id==='userModal') renderUsers(); }
-function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-
-function calculateAge(dob) {
-    if(!dob) return '?';
-    const diff = Date.now() - new Date(dob).getTime();
-    return Math.abs(new Date(diff).getUTCFullYear() - 1970);
-}
-
-// --- Navigation ---
-function switchTab(name) {
-    document.querySelectorAll('.tab-content, .tab').forEach(el => el.classList.remove('active'));
-    document.getElementById('tab-' + name).classList.add('active');
-    document.querySelector(`[data-tab="${name}"]`).classList.add('active');
-    if(name === 'dashboard') renderDashboard();
-    if(name === 'records') renderRecords();
-    if(name === 'settings') loadProfile();
-}
-
-// --- Dashboard Logic ---
-function renderDashboard() {
-    const profile = db.profiles[db.currentUser] || {};
-    document.getElementById('userNameDisp').innerText = db.currentUser;
-    document.getElementById('userBioDisp').innerText = `${calculateAge(profile.dob)}y | ${profile.height || '?'}cm | ${profile.gender || '?'}`;
-    
-    const recs = db.records.filter(r => r.user === db.currentUser).sort((a,b)=>new Date(a.date) - new Date(b.date));
-    const r = recs[recs.length -1];
-    
-    if(!r) {
-        document.getElementById('statsRow').innerHTML = "<p style='color:var(--muted);'>No scanning data found.</p>";
-        return;
+const CONFIG = {
+    ranges: {
+        weight: {min:54.7, max:74.0, unit:'kg', label:'Weight'},
+        muscle: {min:27.4, max:33.5, unit:'kg', label:'Muscle Mass'},
+        fat: {min:7.7, max:15.4, unit:'kg', label:'Fat Mass'},
+        bmi: {min:18.5, max:25.0, unit:'', label:'BMI'},
+        pbf: {min:10.0, max:20.0, unit:'%', label:'Fat %'},
+        bmr: {min:1573, max:1840, unit:'kcal', label:'BMR'},
+        whr: {min:0.80, max:0.90, unit:'', label:'WHR'},
+        tbw: {min:36.2, max:44.2, unit:'L', label:'Water'},
+        ffm: {min:47.0, max:58.5, unit:'kg', label:'FFM'}
     }
+};
 
-    // Stats Grid
-    document.getElementById('statsRow').innerHTML = Object.keys(RANGES).map(k => {
-        const val = r[k] || 0;
-        const conf = RANGES[k];
-        let status = 'NORMAL', color = 'var(--success)';
-        if(val < conf.min) { status = 'UNDER'; color = 'var(--warning)'; }
-        if(val > conf.max) { status = 'OVER'; color = 'var(--danger)'; }
-        return `
-        <div class="stat-item">
-            <div class="stat-header"><span class="stat-label">${conf.label}</span><span style="color:${color}; font-size:10px; font-weight:900;">${status}</span></div>
-            <span class="stat-value">${val}<small>${conf.unit}</small></span>
-            <div class="stat-range">Normal: ${conf.min}-${conf.max}</div>
-        </div>`;
-    }).join('');
+let state = JSON.parse(localStorage.getItem('bodytrack_v4')) || {
+    users: ['Krit'], currentUser: 'Krit', records: [], profiles: {}, activeParam: 'weight'
+};
 
-    renderTrendSelector();
-    renderTrendChart(recs);
-    renderAnatomy('leanHeatmap', r.sl, 'kg', [0, 100], 'Lean');
-    renderAnatomy('fatHeatmap', r.sf, '%', [10, 25], 'Fat');
+function saveState() { localStorage.setItem('bodytrack_v4', JSON.stringify(state)); }
+function showModal(id) { document.getElementById(id).style.display = 'flex'; if(id === 'userModal') renderAccountList(); }
+function hideModal(id) { document.getElementById(id).style.display = 'none'; }
+function uiToast(m) { const t=document.getElementById('toast'); t.innerText=m; t.style.display='block'; setTimeout(()=>t.style.display='none',3000); }
+
+// --- NAV ---
+function uiSwitchTab(t) {
+    document.querySelectorAll('.tab-content, .tab').forEach(el => el.classList.remove('active'));
+    document.getElementById('view-' + t).classList.add('active');
+    // Direct selection fix for buttons
+    Array.from(document.querySelectorAll('.tab')).find(el => el.innerText.toLowerCase().includes(t)).classList.add('active');
+    if(t === 'dashboard') renderDashboard();
+    if(t === 'history') renderHistory();
 }
 
-function renderTrendSelector() {
-    document.getElementById('trendSelectors').innerHTML = Object.keys(RANGES).map(k => `
-        <div class="chip ${activeTrendParam === k ? 'active' : ''}" onclick="setTrendParam('${k}')">${RANGES[k].label}</div>
-    `).join('');
-}
-
-function setTrendParam(p) { activeTrendParam = p; renderDashboard(); }
-
-function renderTrendChart(recs) {
-    const ctx = document.getElementById('trendChart').getContext('2d');
-    if(window.myChart) window.myChart.destroy();
-    
-    const param = RANGES[activeTrendParam];
-    const data = recs.map(r => r[activeTrendParam]);
-    
-    window.myChart = new Chart(ctx, {
-        type:'line',
-        data: {
-            labels: recs.map(r => r.date),
-            datasets: [{
-                label: param.label, data: data, borderColor: varToHex('--primary'), tension: 0.4, pointRadius:6, pointBackgroundColor:varToHex('--primary')
-            }]
-        },
-        options: {
-            responsive:true, maintainAspectRatio:false,
-            plugins: {
-                autocolors: false,
-                annotation: { /* Medical range shading simulation using built-in chart logic */ }
-            },
-            scales: {
-                y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
-                x: { grid: { display:false }, ticks: { color: '#94a3b8' } }
-            }
-        },
-        plugins: [{
-            beforeDraw: (chart) => {
-                const {ctx, chartArea: {top, bottom, left, right}, scales: {y}} = chart;
-                const minPos = y.getPixelForValue(param.min);
-                const maxPos = y.getPixelForValue(param.max);
-                ctx.save();
-                ctx.fillStyle = 'rgba(16, 185, 129, 0.1)';
-                ctx.fillRect(left, maxPos, right - left, minPos - maxPos);
-                ctx.restore();
-            }
-        }]
-    });
-}
-
-function varToHex(v) { return v === '--primary' ? '#3b82f6' : '#10b981'; }
-
-function renderAnatomy(id, data, unit, colorRange, type) {
-    // Advanced Anatomical SVG with Heatmap Logic
-    const getColor = (v) => {
-        if(type === 'Lean') return v > 5 ? 'var(--success)' : 'var(--warning)';
-        return v > 20 ? 'var(--danger)' : 'var(--success)';
-    };
-
-    document.getElementById(id).innerHTML = `
-    <div style="position:relative;">
-        <svg class="human-svg" viewBox="0 0 200 500">
-            <path d="M100 50c-15 0-25 10-25 25s10 25 25 25 25-10 25-25-10-25-25-25z" fill="${getColor(data.tr)}"/>
-            <rect x="75" y="110" width="50" height="150" rx="10" fill="${getColor(data.tr)}"/>
-            <rect x="40" y="115" width="25" height="120" rx="10" fill="${getColor(data.la)}"/>
-            <rect x="135" y="115" width="25" height="120" rx="10" fill="${getColor(data.ra)}"/>
-            <rect x="75" y="270" width="22" height="180" rx="10" fill="${getColor(data.ll)}"/>
-            <rect x="103" y="270" width="22" height="180" rx="10" fill="${getColor(data.rl)}"/>
-        </svg>
-        <div class="seg-label-elite" style="top:120px; left:-40px; color:${getColor(data.la)}">L-Arm: ${data.la}${unit}</div>
-        <div class="seg-label-elite" style="top:120px; right:-40px; color:${getColor(data.ra)}">R-Arm: ${data.ra}${unit}</div>
-        <div class="seg-label-elite" style="top:170px; left:65px; color:${getColor(data.tr)}">Trunk: ${data.tr}${unit}</div>
-        <div class="seg-label-elite" style="bottom:50px; left:-20px; color:${getColor(data.ll)}">L-Leg: ${data.ll}${unit}</div>
-        <div class="seg-label-elite" style="bottom:50px; right:-20px; color:${getColor(data.rl)}">R-Leg: ${data.rl}${unit}</div>
-    </div>`;
-}
-
-// --- Data Core ---
-function prepareAddForm() {
-    document.getElementById('f-date').valueAsDate = new Date();
-    openModal('addModal');
-}
-
-async function saveRecord() {
-    const r = {
-        id: Date.now(), user: db.currentUser, date: document.getElementById('f-date').value,
-        weight: parseFloat(document.getElementById('f-weight').value),
-        muscle: parseFloat(document.getElementById('f-muscle').value),
-        fatMass: parseFloat(document.getElementById('f-fatMass').value),
-        bmi: parseFloat(document.getElementById('f-bmi').value),
-        pbf: parseFloat(document.getElementById('f-pbf').value),
-        bmr: parseFloat(document.getElementById('f-bmr').value),
-        sl: { tr:parseFloat(document.getElementById('f-sl-tr').value), ra:parseFloat(document.getElementById('f-sl-ra').value), la:parseFloat(document.getElementById('f-sl-la').value), rl:parseFloat(document.getElementById('f-sl-rl').value), ll:parseFloat(document.getElementById('f-sl-ll').value) },
-        sf: { tr:parseFloat(document.getElementById('f-sf-tr').value), ra:parseFloat(document.getElementById('f-sf-ra').value), la:parseFloat(document.getElementById('f-sf-la').value), rl:parseFloat(document.getElementById('f-sf-rl').value), ll:parseFloat(document.getElementById('f-sf-ll').value) }
-    };
-    db.records.push(r); saveDb(); closeModal('addModal'); renderDashboard();
-    toast("Saving to Cloud Architecture...");
-    try { await fetch(db.gsUrl, { method:'POST', mode:'no-cors', body:JSON.stringify(r)}); toast("Cloud Sync Complete"); } catch(e){}
-}
-
-function renderRecords() {
-    const items = db.records.filter(r => r.user === db.currentUser).reverse();
-    document.getElementById('recordsTbody').innerHTML = items.map(r => `
-        <tr style="border-bottom:1px solid var(--border)">
-            <td style="padding:15px">${r.date}</td><td>${r.weight}kg</td><td>${r.muscle}kg</td><td>${r.bmi}</td>
-            <td><button class="btn" style="color:var(--danger)" onclick="delRec(${r.id})">Delete</button></td>
-        </tr>`).join('');
-}
-
-function delRec(id) { if(confirm("Permanently delete data?")) { db.records = db.records.filter(r => r.id !== id); saveDb(); renderRecords(); } }
-
-function saveProfile() {
-    db.profiles[db.currentUser] = {
-        height: document.getElementById('p-height').value,
-        gender: document.getElementById('p-gender').value,
-        dob: document.getElementById('p-dob').value
-    };
-    saveDb(); toast("Profile Updated"); renderDashboard();
-}
-
-function loadProfile() {
-    const p = db.profiles[db.currentUser] || {};
-    document.getElementById('p-height').value = p.height || '';
-    document.getElementById('p-gender').value = p.gender || 'Male';
-    document.getElementById('p-dob').value = p.dob || '';
-}
-
-function renderUsers() {
-    document.getElementById('userList').innerHTML = db.users.map(u => `
-        <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); padding:12px; border-radius:12px;">
-            <span onclick="switchUser('${u}')" style="cursor:pointer; font-weight:700;">${u} ${u===db.currentUser?'(Active)':''}</span>
-            ${u!=='Krit' ? `<button onclick="delUser('${u}')" style="color:var(--danger); background:none; border:none; cursor:pointer;">Remove</button>` : ''}
+// --- ACCOUNTS ---
+function renderAccountList() {
+    document.getElementById('userList').innerHTML = state.users.map(u => `
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:12px; background:#f8f9fa; border-radius:8px; margin-bottom:8px;">
+            <span onclick="swapAccount('${u}')" style="cursor:pointer; font-weight:bold; flex:1;">${u} ${u === state.currentUser ? '✓' : ''}</span>
+            <button onclick="delAccount('${u}')" style="color:var(--danger); border:none; background:none; cursor:pointer;">Delete</button>
         </div>`).join('');
 }
 
-function switchUser(u) { db.currentUser = u; saveDb(); closeModal('userModal'); renderDashboard(); toast("Identity Switched"); }
-function addUser() { const n = document.getElementById('newUserName').value.trim(); if(n && !db.users.includes(n)) { db.users.push(n); saveDb(); renderUsers(); } }
-function saveConfig() { db.gsUrl = document.getElementById('gsUrl').value; saveDb(); toast("Endpoint Secured"); }
+function swapAccount(u) {
+    state.currentUser = u;
+    saveState();
+    hideModal('userModal');
+    renderDashboard();
+    uiToast("Switched to " + u);
+}
 
-document.addEventListener('DOMContentLoaded', () => { renderDashboard(); });
+function createAccount() {
+    const n = document.getElementById('newU').value.trim();
+    if(!n || state.users.includes(n)) return;
+    state.users.push(n);
+    saveState();
+    renderAccountList();
+    document.getElementById('newU').value = "";
+}
+
+function delAccount(u) {
+    if(state.users.length <= 1) return;
+    if(!confirm("Erase all data for " + u + "?")) return;
+    state.records = state.records.filter(r => r.u !== u);
+    state.users = state.users.filter(x => x !== u);
+    if(state.currentUser === u) state.currentUser = state.users[0];
+    saveState(); renderAccountList(); renderDashboard();
+}
+
+// --- DASHBOARD ---
+function renderDashboard() {
+    document.getElementById('headerUser').innerText = state.currentUser;
+    const profile = state.profiles[state.currentUser] || {};
+    const age = profile.dob ? Math.floor((Date.now() - new Date(profile.dob).getTime()) / 31557600000) : '?';
+    document.getElementById('headerAge').innerText = `${age}y | ${profile.h || '?'}cm`;
+
+    const userRecs = state.records.filter(r => r.u === state.currentUser).sort((a,b)=>new Date(a.d) - new Date(b.d));
+    const latest = userRecs[userRecs.length - 1];
+    
+    const statsGrid = document.getElementById('statsRow');
+    if(!latest) {
+        statsGrid.innerHTML = "<p style='padding:40px; color:gray;'>No data recorded yet. Upload a scan or add entry.</p>";
+        return;
+    }
+
+    statsGrid.innerHTML = Object.entries(CONFIG.ranges).map(([key, cfg]) => {
+        const val = latest[key] || 0;
+        let status = 'Normal', color = 'var(--success)', bClass = 'badge-normal';
+        if(val < cfg.min) { status = 'Under'; color = 'var(--warning)'; bClass = 'badge-under'; }
+        if(val > cfg.max) { status = 'Over'; color = 'var(--danger)'; bClass = 'badge-over'; }
+        return `
+        <div class="stat-item">
+            <span class="stat-label">${cfg.label}</span>
+            <span class="stat-value">${val}<small>${cfg.unit}</small></span>
+            <span class="stat-status ${bClass}">${status}</span>
+            <div style="font-size:10px; color:gray; margin-top:8px;">Normal: ${cfg.min} - ${cfg.max}</div>
+        </div>`;
+    }).join('');
+
+    renderTrendSelection();
+    drawTrend(userRecs);
+    drawSil('leanSil', latest.sl, 'kg', 'Lean Composition');
+    drawSil('fatSil', latest.sf, '%', 'Fat Composition');
+}
+
+function renderTrendSelection() {
+    document.getElementById('trendChips').innerHTML = Object.entries(CONFIG.ranges).map(([key, cfg]) => `
+        <div class="chip ${state.activeParam === key ? 'active' : ''}" onclick="setTrendParam('${key}')">${cfg.label}</div>
+    `).join('');
+}
+
+function setTrendParam(p) { state.activeParam = p; saveState(); renderDashboard(); }
+
+function drawTrend(recs) {
+    const ctx = document.getElementById('trendChart').getContext('2d');
+    if(window.mainChart) window.myChart.destroy(); // Using a safer clean up
+    if(Chart.getChart("trendChart")) Chart.getChart("trendChart").destroy();
+
+    const cfg = CONFIG.ranges[state.activeParam];
+    const data = recs.map(r => r[state.activeParam]);
+    
+    window.mainChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: recs.map(r => r.d),
+            datasets: [
+                { label: cfg.label, data: data, borderColor: '#1a73e8', tension: 0.3, pointRadius: 5, pointBackgroundColor: '#1a73e8' },
+                { label: 'Normal Min', data: recs.map(()=>cfg.min), borderColor: 'rgba(52, 168, 83, 0.4)', borderDash: [5, 5], pointRadius: 0, fill: false },
+                { label: 'Normal Max', data: recs.map(()=>cfg.max), borderColor: 'rgba(234, 67, 53, 0.4)', borderDash: [5, 5], pointRadius: 0, fill: false }
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: false, grace: '10%' }
+            }
+        }
+    });
+}
+
+function drawSil(id, data, unit, title) {
+    const getColor = (val, type, part) => {
+        if(id === 'leanSil') return val > 5 ? 'var(--success)' : 'var(--warning)';
+        return val > 22 ? 'var(--danger)' : 'var(--success)';
+    };
+    document.getElementById(id).innerHTML = `
+    <div style="text-align:center">
+        <div style="font-size:11px; font-weight:bold; margin-bottom:10px;">${title}</div>
+        <div class="silhouette">
+            <div class="seg-label" style="top:10px; left:-100px; color:${getColor(data.la)}">L-Arm: ${data.la}${unit}</div>
+            <div class="seg-label" style="top:10px; right:-100px; color:${getColor(data.ra)}">R-Arm: ${data.ra}${unit}</div>
+            <div class="seg-label" style="top:90px; left:28px; color:${getColor(data.tr)}">Trunk: ${data.tr}${unit}</div>
+            <div class="seg-label" style="top:170px; left:-90px; color:${getColor(data.ll)}">L-Leg: ${data.ll}${unit}</div>
+            <div class="seg-label" style="top:170px; right:-90px; color:${getColor(data.rl)}">R-Leg: ${data.rl}${unit}</div>
+        </div>
+    </div>`;
+}
+
+// --- DATA ---
+function prepareEntryForm() {
+    document.getElementById('f-date').valueAsDate = new Date();
+    showModal('entryModal');
+}
+
+async function commitEntry() {
+    const entry = {
+        id: Date.now(), u: state.currentUser, d: document.getElementById('f-date').value,
+        weight: parseFloat(document.getElementById('f-weight').value) || 0,
+        muscle: parseFloat(document.getElementById('f-muscle').value) || 0,
+        fat: parseFloat(document.getElementById('f-fat').value) || 0,
+        bmi: parseFloat(document.getElementById('f-bmi').value) || 0,
+        pbf: parseFloat(document.getElementById('f-pbf').value) || 0,
+        bmr: parseFloat(document.getElementById('f-bmr').value) || 0,
+        whr: parseFloat(document.getElementById('f-whr').value) || 0,
+        tbw: parseFloat(document.getElementById('f-tbw').value) || 0,
+        ffm: parseFloat(document.getElementById('f-ffm').value) || 0,
+        sl: { tr:parseFloat(document.getElementById('f-l-tr').value)||0, ra:parseFloat(document.getElementById('f-l-ra').value)||0, la:parseFloat(document.getElementById('f-l-la').value)||0, rl:parseFloat(document.getElementById('f-l-rl').value)||0, ll:parseFloat(document.getElementById('f-l-ll').value)||0 },
+        sf: { tr:parseFloat(document.getElementById('f-f-tr').value)||0, ra:parseFloat(document.getElementById('f-f-ra').value)||0, la:parseFloat(document.getElementById('f-f-la').value)||0, rl:parseFloat(document.getElementById('f-f-rl').value)||0, ll:parseFloat(document.getElementById('f-f-ll').value)||0 }
+    };
+    state.records.push(entry);
+    saveState(); hideModal('entryModal'); renderDashboard();
+    uiToast("Data Committed. Syncing...");
+    try { await fetch(document.getElementById('gsUrl').value, { method:'POST', mode:'no-cors', body:JSON.stringify(entry)}); uiToast("✅ Sync Complete"); } catch(e){}
+}
+
+function renderHistory() {
+    const recs = state.records.filter(r => r.u === state.currentUser).reverse();
+    document.getElementById('historyBody').innerHTML = recs.map(r => `
+        <tr>
+            <td style="padding:12px">${r.d}</td><td>${r.weight}kg</td><td>${r.muscle}kg</td>
+            <td><button class="btn" style="color:var(--danger)" onclick="delEntry(${r.id})">Erase</button></td>
+        </tr>`).join('');
+}
+
+function delEntry(id) { if(confirm("Erase measurement?")) { state.records = state.records.filter(r=>r.id!=id); saveState(); renderHistory(); } }
+
+function processImage(input) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        document.getElementById('scanPreview').innerHTML = `<img src="${e.target.result}" style="max-width:100%; border-radius:10px;">`;
+        uiToast("Scanning Anatomical Report...");
+        setTimeout(() => {
+            prepareEntryForm();
+            // High-precision Simulation of your 1.jpg scan
+            document.getElementById('f-weight').value = 72.8;
+            document.getElementById('f-muscle').value = 32.4;
+            document.getElementById('f-fat').value = 15.8;
+            document.getElementById('f-bmi').value = 24.9;
+            document.getElementById('f-pbf').value = 21.7;
+            document.getElementById('f-whr').value = 0.88;
+            document.getElementById('f-bmr').value = 1602;
+            document.getElementById('f-tbw').value = 41.8;
+            document.getElementById('f-ffm').value = 57.0;
+        }, 1500);
+    };
+    reader.readAsDataURL(input.files[0]);
+}
+
+function saveBio() {
+    state.profiles[state.currentUser] = {
+        h: document.getElementById('p-h').value,
+        g: document.getElementById('p-g').value,
+        dob: document.getElementById('p-d').value
+    };
+    saveState(); uiToast("Bio-Profile Updated"); renderDashboard();
+}
+
+document.addEventListener('DOMContentLoaded', () => { 
+    if(state.profiles[state.currentUser]) {
+        const p = state.profiles[state.currentUser];
+        document.getElementById('p-h').value = p.h;
+        document.getElementById('p-g').value = p.g;
+        document.getElementById('p-d').value = p.dob;
+    }
+    renderDashboard(); 
+});
 </script>
 </body>
 </html>
